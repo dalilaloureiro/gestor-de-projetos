@@ -1,0 +1,46 @@
+module Model where
+
+
+
+
+data TipoContacto = 
+
+
+--type Contacto = (String, String, String) 1º forma de fazer
+--melhor forma de fazer
+
+
+
+data Contacto= Contacto
+                {nome::String
+                ,telefone::String
+                ,email::String
+                ,tipoContacto::tipoContacto
+                }deriving(Show, Eq)
+
+
+type LTelefonica = [Contacto]
+
+
+
+--------------
+
+--Exemplo de uma nova entidade
+
+data Chamada = Chamada
+                {telefoneOrigem :: IDTelefone
+                ,duracaochamda:: Int
+                }
+
+
+type LChamadas = [Chamada]
+
+
+--------------
+
+listaTelefonicaExemplo = [ Contacto "Ana" "912467235" "ana@utad.pt" Pessoal
+                         ,Contacto "João" "259888888" "joao@utad.pt" Casa
+                        ]
+
+
+chamadaExemplo =Chamada "912467235" 120
