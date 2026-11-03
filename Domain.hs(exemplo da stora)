@@ -1,0 +1,31 @@
+module Domain where
+
+import Model
+
+--ex1
+emails :: LTelefonica -> [String]
+emails [] = []
+emails ((_,_,em):t) = em : (emails t)
+--------------------------------------------------------------------------------------------------
+--exemplo de relação entre duas entidades
+
+--função que recebe uma chamada e pesqueisa 
+--na lista telefónica o nome da pessoa que ligou 
+
+quemligou :: Chamda->LTelefonica->String
+quemligou _ [] = "Numero Desconhecido"
+quemligou ch (x:xs)
+        |telefone x == telefoneOrigem ch = nome x
+        |otherwise =quemligou ch xs
+
+
+
+
+--funcao principal
+historicochamadas::LChamadas->LTelefonica->[String]
+--historicochamadas []lT = []
+--historicochamadas (x:xs) lT = (quemligou x lT):(hisotiricoChamadas xs lT)
+
+
+--faz a mesma coisa que as duas ligas de cima 
+hisotiricoChamadas lC lT = [quemligou c lT | c<- lC]
