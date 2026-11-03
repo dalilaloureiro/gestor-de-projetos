@@ -12,11 +12,6 @@ Módulo principal que:
 -}
 module Main where
 
-import Model
-import qualified Domain
-import qualified Persistence
-import qualified Reports
-
 -- | Função principal
 main :: IO ()
 main = do

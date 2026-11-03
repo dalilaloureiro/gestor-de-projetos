@@ -25,7 +25,6 @@ module Persistence
   ) where
 
 import Model
-import qualified Parsing
 
 -- | Caminho padrão do ficheiro de estado
 defaultStateFile :: FilePath

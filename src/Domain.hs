@@ -52,6 +52,7 @@ module Domain
   , showPriority
   ) where
 
+import Data.List (find)
 import Model
 
 -- Smart constructors ----------------------------------------------------------
@@ -96,31 +97,19 @@ mkLabel name
 
 -- | Encontra um projeto por ID
 findProject :: ProjectId -> [Project] -> Maybe Project
-findProject _ [] = Nothing
-findProject pid (p:ps)
-  | projectId p == pid = Just p
-  | otherwise          = findProject pid ps
+findProject pid = find ((== pid) . projectId)
 
 -- | Encontra um sprint por ID dentro de um projeto
 findSprint :: SprintId -> Project -> Maybe Sprint
-findSprint _ (Project _ _ _ _ []) = Nothing
-findSprint sid (Project pid name desc members (s:ss))
-  | sprintId s == sid = Just s
-  | otherwise         = findSprint sid (Project pid name desc members ss)
+findSprint sid project = find ((== sid) . sprintId) (projectSprints project)
 
 -- | Encontra uma tarefa por ID dentro de um sprint
 findTask :: TaskId -> Sprint -> Maybe Task
-findTask _ (Sprint _ _ _ _ []) = Nothing
-findTask tid (Sprint sid name start end (t:ts))
-  | taskId t == tid = Just t
-  | otherwise       = findTask tid (Sprint sid name start end ts)
+findTask tid sprint = find ((== tid) . taskId) (sprintTasks sprint)
 
 -- | Encontra um membro por ID dentro de um projeto
 findMember :: MemberId -> Project -> Maybe Member
-findMember _ (Project _ _ _ [] _) = Nothing
-findMember mid (Project pid name desc (m:ms) sprints)
-  | memberId m == mid = Just m
-  | otherwise         = findMember mid (Project pid name desc ms sprints)
+findMember mid project = find ((== mid) . memberId) (projectMembers project)
 
 -- Listagens -------------------------------------------------------------------
 
@@ -187,14 +176,16 @@ countDoneAndTotal (t:ts) =
 --   reutilizando 'progressSprint' para cada sprint.
 progressProject :: Project -> Double
 progressProject project =
-  let sprints = projectSprints project
-  in if null sprints
-        then 0.0
-        else average (map progressSprint sprints)
+  case sumSprintProgress (projectSprints project) of
+    (_, 0) -> 0.0
+    (total, count) -> total / fromIntegral count
 
--- | Média de uma lista de Doubles (recursiva)
-average :: [Double] -> Double
-average xs = sum xs / fromIntegral (length xs)
+-- | Percorre recursivamente os sprints para somar o progresso e contar quantos existem.
+sumSprintProgress :: [Sprint] -> (Double, Int)
+sumSprintProgress [] = (0.0, 0)
+sumSprintProgress (s:ss) =
+  let (total, count) = sumSprintProgress ss
+  in (progressSprint s + total, count + 1)
 
 -- Recursão justificada #3: verificação de bloqueios ---------------------------
 
@@ -218,10 +209,7 @@ allDependenciesDone (depId:deps) allTasks =
 
 -- | Busca auxiliar por TaskId numa lista de tarefas (recursiva)
 findTaskById :: TaskId -> [Task] -> Maybe Task
-findTaskById _ [] = Nothing
-findTaskById tid (t:ts)
-  | taskId t == tid = Just t
-  | otherwise       = findTaskById tid ts
+findTaskById tid = find ((== tid) . taskId)
 
 -- Transições de estado --------------------------------------------------------
 

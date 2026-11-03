@@ -30,7 +30,6 @@ module Reports
   ) where
 
 import Model
-import qualified Domain
 
 -- Relatórios de Sprint --------------------------------------------------------
 
