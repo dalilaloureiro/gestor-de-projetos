@@ -65,75 +65,73 @@ O **gestor-de-projetos** pretende resolver este problema oferecendo uma aplicaç
 
 ---
 
-## 6. Dados — Entidades, Estruturas e Relações
+## 6. Exemplo de Fluxo Padrão da Aplicação (baseado no `data/seed.hs`)
 
-### 6.1 Tipos principais (rascunho)
+O diagrama abaixo ilustra a jornada do utilizador (Gestor ou Developer) quando a aplicacao estiver completa (Fase 3), num cenario simples: 1 projeto, 1 sprint, 1 tarefa.
 
-```haskell
--- Identificadores
-type ProjectId = Int
-type SprintId  = Int
-type TaskId    = Int
-type MemberId  = Int
+```mermaid
 
--- Estados e prioridades
-data TaskStatus = ToDo | InProgress | Review | Done
-  deriving (Eq, Show, Read, Enum, Bounded)
+flowchart TD
+    A["Iniciar aplicacao"] --> B{"Primeira execucao?"}
+    B -- Sim --> C["Carrega dados de demonstracao"]
+    B -- Nao --> D["Carrega projeto guardado"]
+    C --> E["Menu Principal"]
+    D --> E
 
-data Priority = Low | Medium | High | Critical
-  deriving (Eq, Ord, Show, Read, Enum, Bounded)
+    E --> F["1. Ver Projetos"]
+    F --> F1["Lista: gestor-de-projetos"]
+    F1 --> E
 
--- Entidades
-data Member = Member
-  { memberId   :: MemberId
-  , memberName :: String
-  , memberRole :: String
-  } deriving (Eq, Show)
+    E --> G["2. Entrar no Projeto"]
+    G --> H["Menu do Projeto"]
 
-data Label = Label
-  { labelName :: String
-  } deriving (Eq, Show)
+    H --> I["2.1 Ver Sprints"]
+    I --> I1["Sprint 1: 1 tarefa, 0% concluido"]
+    I1 --> H
 
-data Task = Task
-  { taskId          :: TaskId
-  , taskTitle       :: String
-  , taskDescription :: String
-  , taskStatus      :: TaskStatus
-  , taskPriority    :: Priority
-  , taskAssignee    :: Maybe MemberId
-  , taskLabels      :: [Label]
-  , taskDependsOn   :: [TaskId]
-  } deriving (Eq, Show)
+    H --> J["2.2 Ver Tarefas do Sprint"]
+    J --> J1["Tarefa: Implementar Domain.hs<br/>Estado: Por fazer | Prioridade: Alta<br/>Responsavel: Alice"]
+    J1 --> H
 
-data Sprint = Sprint
-  { sprintId     :: SprintId
-  , sprintName   :: String
-  , sprintStart  :: String   -- data em formato simples
-  , sprintEnd    :: String
-  , sprintTasks  :: [Task]
-  } deriving (Eq, Show)
+    H --> K["2.3 Iniciar Tarefa"]
+    K --> K1["Muda estado: Por fazer -> Em progresso"]
+    K1 --> K2["Progresso atualizado: 0%"]
+    K2 --> H
 
-data Project = Project
-  { projectId     :: ProjectId
-  , projectName   :: String
-  , projectDesc   :: String
-  , projectMembers :: [Member]
-  , projectSprints :: [Sprint]
-  } deriving (Eq, Show)
+    H --> L["2.4 Concluir Tarefa"]
+    L --> L1["Muda estado: Em progresso -> Concluido"]
+    L1 --> L2["Progresso: 100% (1 de 1 concluida)"]
+    L2 --> H
 
--- Estado global da aplicação
-data AppState = AppState
-  { projects :: [Project]
-  } deriving (Eq, Show)
+    H --> M["2.5 Ver Carga da Equipa"]
+    M --> M1["Alice: 1 tarefa concluida"]
+    M1 --> H
+
+    H --> N["3. Filtrar Tarefas"]
+    N --> N1["Filtro: Concluidas + Alice"]
+    N1 --> N2["Resultado: 1 tarefa"]
+    N2 --> H
+
+    H --> O["Voltar ao Menu Principal"]
+    O --> E
+
+    E --> P["4. Sair<br/>Projecto guardado automaticamente"]
+    P --> Q["Fim"]
+
+    style A fill:#e1f5fe
+    style Q fill:#ffebee
+    style K2 fill:#e8f5e9
+    style L2 fill:#e8f5e9
+
 ```
 
-> Os tipos concretos serão refinados na Fase 1; esta é a modelação inicial.
+### Legenda do Fluxo
 
-### 6.2 Relações
-
-- Um **Projeto** tem vários **Sprints** e vários **Membros**.
-- Um **Sprint** tem várias **Tarefas**.
-- Uma **Tarefa** pode ter um **responsável** (`Maybe MemberId`), várias **etiquetas** e **dependências** para outras tarefas (`[TaskId]`).
+| Cor | Significado |
+|-----|-------------|
+| Azul | Inicio / carregamento |
+| Vermelho | Fim / saida |
+| Verde | Accao concluida com sucesso |
 
 ---
 
@@ -164,35 +162,9 @@ data AppState = AppState
 | **Modularização** | `Model`, `Domain`, `Parsing`, `Persistence`, `Reports`, `Main`. |
 | **Testes** | Testes das funções puras com casos normais, limites e erros. |
 
----
 
-## 9. Complexidade
 
-Elementos que justificam a dimensão e o interesse do projeto:
-
-- **Relações entre múltiplas entidades** (projeto → sprint → tarefa → dependências), exigindo navegação e atualização consistentes.
-- **Máquina de estados** para tarefas, com regras explícitas de transição e validação.
-- **Dependências entre tarefas**, com necessidade de deteção de bloqueios e (opcionalmente) de ciclos.
-- **Cálculo de prioridade efetiva** combinando prioridade base, etiquetas e prazos.
-- **Pipelines de filtragem combináveis**, que exercitam HOF e composição.
-- **Parsing e validação de dados externos**, com `Either` e mensagens de erro claras.
-- **Relatórios agregados**, que exercitam `fold` e composição.
-
----
-
-## 10. Equipa
-
-| Nome | Número | Papel inicial |
-|---|---|---|
-| _(a preencher)_ | _(a preencher)_ | _(ex.: modelação e domínio)_ |
-| _(a preencher)_ | _(a preencher)_ | _(ex.: parsing e persistência)_ |
-| _(a preencher)_ | _(a preencher)_ | _(ex.: relatórios e testes)_ |
-
-> Ajustar conforme a constituição real do grupo.
-
----
-
-## 11. Plano de Desenvolvimento por Fases (alinhado com o framework)
+## 10. Plano de Desenvolvimento por Fases (alinhado com o framework)
 
 ### Fase 1 — Modelação e núcleo funcional
 - Definir `Model.hs` com ADTs e records principais.
@@ -220,7 +192,7 @@ Elementos que justificam a dimensão e o interesse do projeto:
 
 ---
 
-## 12. Estrutura de Repositório Prevista
+## 11. Estrutura de Repositório Prevista
 
 ```
 gestor-de-projetos/
@@ -242,5 +214,3 @@ gestor-de-projetos/
 └── docs/
     └── relatorio.pdf
 ```
-
-

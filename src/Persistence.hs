@@ -1,9 +1,6 @@
 {-|
 Module      : Persistence
 Description : Persistência do estado da aplicação em ficheiros
-Copyright   : (c) 2024 Francisco, Dalila, Duarte
-License     : MIT
-Maintainer  : exemplo@universidade.pt
 
 Responsável por:
 - Leitura do estado a partir de ficheiro no arranque

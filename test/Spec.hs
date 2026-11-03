@@ -1,9 +1,6 @@
 {-|
 Module      : Spec
 Description : Suite de testes para o núcleo funcional (Domain)
-Copyright   : (c) 2024 Francisco, Dalila, Duarte
-License     : MIT
-Maintainer  : exemplo@universidade.pt
 
 Testes das funções puras principais:
 - Consultas (findProject, findSprint, findTask)

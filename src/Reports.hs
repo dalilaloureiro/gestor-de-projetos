@@ -1,9 +1,6 @@
 {-|
 Module      : Reports
 Description : Geração de relatórios textuais a partir do modelo
-Copyright   : (c) 2024 Francisco, Dalila, Duarte
-License     : MIT
-Maintainer  : exemplo@universidade.pt
 
 Responsável por:
 - Relatórios de sprint: tarefas por estado, progresso, bloqueadas

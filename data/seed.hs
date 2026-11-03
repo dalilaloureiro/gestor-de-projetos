@@ -1,6 +1,4 @@
--- Dados de demonstração (seed) para o gestor-de-projetos
--- Formato: valores Haskell que podem ser carregados via Parsing ou interpretados diretamente
--- Este ficheiro serve como fonte de dados de teste e demonstração
+-- Dados de demonstração (seed) para o projeto
 
 module Seed where
 

@@ -1,9 +1,7 @@
 {-|
 Module      : Domain
 Description : Núcleo funcional puro - regras de domínio e operações sobre o modelo
-Copyright   : (c) 2024 Francisco, Dalila, Duarte
-License     : MIT
-Maintainer  : exemplo@universidade.pt
+
 
 Funções puras que implementam a lógica de domínio:
 - Criação e validação de entidades

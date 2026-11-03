@@ -1,9 +1,6 @@
 {-|
 Module      : Main
 Description : Ponto de entrada da aplicação - interface de terminal
-Copyright   : (c) 2024 Francisco, Dalila, Duarte
-License     : MIT
-Maintainer  : exemplo@universidade.pt
 
 Módulo principal que:
 - Inicializa o estado (carrega de ficheiro ou usa seed)
@@ -40,10 +37,3 @@ main = do
   putStrLn "Para executar:   cabal run gestor-de-projetos"
   putStrLn "Para testar:     cabal test"
   putStrLn ""
-  putStrLn "Próximos passos (Elemento B):"
-  putStrLn "  - Implementar funções em Domain.hs"
-  putStrLn "  - Adicionar testes em test/Spec.hs"
-  putStrLn ""
-  putStrLn "Próximos passos (Elemento C):"
-  putStrLn "  - Criar dados de teste em data/seed.txt"
-  putStrLn "  - Configurar suite de testes"
