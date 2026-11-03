@@ -1,0 +1,53 @@
+cabal-version:       3.0
+name:                gestor-de-projetos
+version:             0.1.0.0
+synopsis:            Sistema de gestão de projetos, tarefas e sprints em Haskell
+description:         Aplicação de linha de comandos para gestão de projetos de desenvolvimento
+                     de software, com modelação de domínio, núcleo funcional puro, persistência
+                     e relatórios.
+license:             MIT
+license-file:        LICENSE
+author:              Francisco, Dalila, Duarte
+maintainer:          exemplo@universidade.pt
+category:            Application
+build-type:          Simple
+extra-source-files:  README.md, CHANGELOG.md
+
+source-repository head
+  type:     git
+  location: https://github.com/exemplo/gestor-de-projetos
+
+common common-opts
+  default-language:    Haskell2010
+  ghc-options:         -Wall -Wcompat -Widentities -Wincomplete-record-updates
+                       -Wincomplete-uni-patterns -Wmissing-export-lists
+                       -Wmissing-home-modules -Wpartial-fields -Wredundant-constraints
+
+library
+  import:              common-opts
+  hs-source-dirs:      src
+  exposed-modules:     Model
+                     , Domain
+                     , Parsing
+                     , Persistence
+                     , Reports
+  build-depends:       base >= 4.14 && < 5
+                     , containers >= 0.6
+                     , text >= 1.2
+
+executable gestor-de-projetos
+  import:              common-opts
+  hs-source-dirs:      app
+  main-is:             Main.hs
+  build-depends:       base >= 4.14 && < 5
+                     , gestor-de-projetos
+                     , text >= 1.2
+
+test-suite test-suite
+  import:              common-opts
+  type:                exitcode-stdio-1.0
+  hs-source-dirs:      test
+  main-is:             Spec.hs
+  build-depends:       base >= 4.14 && < 5
+                     , gestor-de-projetos
+                     , HUnit >= 1.6

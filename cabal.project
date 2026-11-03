@@ -1,0 +1,14 @@
+packages: .
+
+-- Configuração padrão para desenvolvimento
+-- Descomente para ativar testes automatizados:
+-- tests: True
+
+-- Perfil de desenvolvimento (otimização 0, debugging)
+-- package *
+--   optimization: 0
+--   ghc-options: -fno-omit-interface-pragmas -fexpose-all-unfoldings
+
+-- Para ativar warnings extra:
+-- package *
+--   ghc-options: -Werror=incomplete-patterns -Werror=incomplete-uni-patterns
