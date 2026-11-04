@@ -86,9 +86,9 @@ Estes dados permitem testar cenários reais de:
 A documentação complementar está disponível em:
 
 - `docs/dados_teste.md`
-- `docs/guia_fase1.md`
+- `docs/guiao_fase1.md`
 
-A suite de testes em `test/Spec.hs` cobre as funções mais relevantes do núcleo funcional e segue uma abordagem simples e legível.
+A suite HUnit em `test/Spec.hs` pode ser executada com `cabal test`. Cobre consultas por ID (incluindo resultados inexistentes), filtros, transições, progresso de sprint/projeto (incluindo listas vazias) e bloqueios por dependências concluídas, pendentes ou inexistentes.
 
 ---
 

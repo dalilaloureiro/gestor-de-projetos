@@ -37,7 +37,7 @@ Este guião serve para apresentar a Fase 1 em poucos minutos, destacando os pont
 
 ## Duração recomendada
 
-- 3 minutos: contexto e visão geral
+- 2 minutos: contexto e visão geral
 - 1 minuto: modelo e domínio
 - 1 minuto: recursão e regras
 - 1 minuto: testes e dados
