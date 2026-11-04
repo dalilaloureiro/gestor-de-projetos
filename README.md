@@ -65,7 +65,34 @@ O **gestor-de-projetos** pretende resolver este problema oferecendo uma aplicaç
 
 ---
 
-## 6. Exemplo de Fluxo Padrão da Aplicação (baseado no `data/seed.hs`)
+## 6. Dados de Teste e Validação da Fase 1
+
+O projeto inclui um conjunto de dados de demonstração em `data/seed.hs` com:
+
+- 1 projeto principal
+- 2 sprints distintos
+- 9 tarefas com estados, prioridades e dependências variadas
+- 4 membros da equipa
+- etiquetas para filtro e organização
+
+Estes dados permitem testar cenários reais de:
+
+- consulta por ID
+- cálculo de progresso por sprint e por projeto
+- tarefas bloqueadas por dependências
+- filtros por estado, responsável e prioridade
+- transições aplicáveis e inválidas
+
+A documentação complementar está disponível em:
+
+- `docs/dados_teste.md`
+- `docs/guia_fase1.md`
+
+A suite de testes em `test/Spec.hs` cobre as funções mais relevantes do núcleo funcional e segue uma abordagem simples e legível.
+
+---
+
+## 7. Exemplo de Fluxo Padrão da Aplicação (baseado no `data/seed.hs`)
 
 O diagrama abaixo ilustra a jornada do utilizador (Gestor ou Developer) quando a aplicacao estiver completa (Fase 3), num cenario simples: 1 projeto, 1 sprint, 1 tarefa.
 
@@ -135,7 +162,7 @@ flowchart TD
 
 ---
 
-## 7. Entrada / Saída
+## 8. Entrada / Saída
 
 | Tipo | Descrição |
 |---|---|
@@ -146,7 +173,7 @@ flowchart TD
 
 ---
 
-## 8. Componente Funcional — Conceitos da UC explorados
+## 9. Componente Funcional — Conceitos da UC explorados
 
 | Conceito | Onde aparece no projeto |
 |---|---|
