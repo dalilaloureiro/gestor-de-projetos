@@ -11,11 +11,12 @@ Testes das funções puras principais:
 
 Framework: HUnit (simples, sem dependências pesadas)
 -}
-module Main where
+module Main (main) where
 
 import Test.HUnit
 import Model
 import qualified Domain
+import System.Exit (exitFailure)
 
 -- Dados de teste mínimos ------------------------------------------------------
 
@@ -41,9 +42,9 @@ testTaskDone = Task 2 "Tarefa 2" "Desc" Done High Nothing [] []
 
 testFindProject :: Test
 testFindProject = TestCase $ do
-  let projects = [testProject]
-  assertEqual "findProject existente" (Just testProject) (Domain.findProject 1 projects)
-  assertEqual "findProject inexistente" Nothing (Domain.findProject 999 projects)
+  let projectList = [testProject]
+  assertEqual "findProject existente" (Just testProject) (Domain.findProject 1 projectList)
+  assertEqual "findProject inexistente" Nothing (Domain.findProject 999 projectList)
 
 testFindSprint :: Test
 testFindSprint = TestCase $ do
@@ -77,6 +78,14 @@ testFilterByAssignee = TestCase $ do
   assertEqual "filterByAssignee 1" [taskAssigned] (Domain.filterByAssignee 1 tasks)
   assertEqual "filterByAssignee 999" [] (Domain.filterByAssignee 999 tasks)
 
+testFilterByLabel :: Test
+testFilterByLabel = TestCase $ do
+  let bugLabel = Model.Label "bug"
+  let taskWithLabel = testTaskTodo { taskLabels = [bugLabel] }
+  let tasks = [taskWithLabel, testTaskDone]
+  assertEqual "filterByLabel existente" [taskWithLabel] (Domain.filterByLabel "bug" tasks)
+  assertEqual "filterByLabel inexistente" [] (Domain.filterByLabel "feature" tasks)
+
 testProgressSprintEmpty :: Test
 testProgressSprintEmpty = TestCase $ do
   let sprint = testSprint { sprintTasks = [] }
@@ -100,6 +109,10 @@ testProgressProject = TestCase $ do
   -- progressProject = média dos sprints: (100 + 0) / 2 = 50
   assertEqual "progressProject" 50.0 (Domain.progressProject proj)
 
+testProgressProjectEmpty :: Test
+testProgressProjectEmpty = TestCase $ do
+  assertEqual "progressProject sem sprints" 0.0 (Domain.progressProject testProject)
+
 testIsBlockedNoDeps :: Test
 testIsBlockedNoDeps = TestCase $ do
   let tasks = [testTaskTodo]
@@ -118,6 +131,11 @@ testIsBlockedWithPendingDep = TestCase $ do
   let taskTodo = testTaskTodo { taskId = 2 }
   let tasks = [taskDep, taskTodo]
   assertBool "isBlocked com dependência ToDo" (Domain.isBlocked 1 tasks)
+
+testIsBlockedWithMissingDep :: Test
+testIsBlockedWithMissingDep = TestCase $ do
+  let taskDep = testTaskTodo { taskDependsOn = [999] }
+  assertBool "isBlocked com dependência inexistente" (Domain.isBlocked 1 [taskDep])
 
 testCanTransition :: Test
 testCanTransition = TestCase $ do
@@ -146,18 +164,23 @@ tests = TestList
   , testFilterByStatus
   , testFilterByPriority
   , testFilterByAssignee
+  , testFilterByLabel
   , testProgressSprintEmpty
   , testProgressSprintAllDone
   , testProgressSprintMixed
   , testProgressProject
+  , testProgressProjectEmpty
   , testIsBlockedNoDeps
   , testIsBlockedWithDoneDep
   , testIsBlockedWithPendingDep
+  , testIsBlockedWithMissingDep
   , testCanTransition
   , testTransitionTask
   ]
 
 main :: IO ()
 main = do
-  _ <- runTestTT tests
-  return ()
+  testCounts <- runTestTT tests
+  if errors testCounts > 0 || failures testCounts > 0
+    then exitFailure
+    else pure ()
