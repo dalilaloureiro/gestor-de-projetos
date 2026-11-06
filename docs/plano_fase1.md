@@ -42,7 +42,7 @@ Para evitar bloqueios e sobreposição:
 
 | # | Tarefa | Entregável | Depende de |
 |---|---|---|---|
-| A1 | Definir ADTs e records principais (`TaskStatus`, `Priority`, `Member`, `Label`, `Task`, `Sprint`, `Project`, `AppState`) | `src/Model.hs` | — |
+| A1 | Definir ADTs e records principais (`TaskStatus`, `Priority`, `Member`, `Task`, `Sprint`, `Project`) | `src/Model.hs` | — |
 | A2 | Definir assinaturas explícitas dos tipos e derivar `Eq`, `Show`, `Read`, `Enum`, `Bounded` onde fizer sentido | `src/Model.hs` | A1 |
 | A3 | Criar estrutura inicial do repositório (`taskflow.cabal`, `cabal.project`, pastas `src/`, `app/`, `test/`, `data/`, `docs/`) | Repositório compilável vazio | — |
 | A4 | Criar módulos esqueleto (`Domain.hs`, `Parsing.hs`, `Persistence.hs`, `Reports.hs`) com assinaturas comentadas (stubs) | Ficheiros `.hs` com `undefined`/comentários | A3 |
@@ -95,7 +95,7 @@ Para evitar bloqueios e sobreposição:
 
 | # | Tarefa | Entregável | Depende de |
 |---|---|---|---|
-| C1 | Definir um pequeno conjunto de dados de teste (1 projeto, 2 sprints, ~8 tarefas com estados/prioridades variados, dependências e etiquetas) | `data/seed.hs` (valores Haskell) | A1 |
+| C1 | Definir um pequeno conjunto de dados de teste (1 projeto, 2 sprints, ~8 tarefas com estados/prioridades variados e dependências) | `data/seed.hs` (valores Haskell) | A1 |
 | C2 | Documentar os dados de teste (o que cada cenário cobre) | `docs/dados_teste.md` | C1 |
 | C3 | Configurar a suite de testes (`test/Spec.hs`) com framework simples (ex.: `HUnit` ou testes manuais com `assert`) | `test/Spec.hs` compilável | A3 |
 | C4 | Testes das funções de consulta (`findProject`, `findSprint`, `findTask`) — caso existente e caso inexistente (`Nothing`) | `test/Spec.hs` | B1 |

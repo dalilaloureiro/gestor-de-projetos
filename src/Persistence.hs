@@ -34,21 +34,20 @@ defaultStateFile = "data/state.txt"
 seedFile :: FilePath
 seedFile = "data/seed.txt"
 
--- | Carrega o estado da aplicação a partir do ficheiro padrão
---   Retorna 'AppState' vazio se o ficheiro não existir ou houver erro
-loadState :: IO (Either String AppState)
-loadState = undefined  -- TODO: implementar leitura de ficheiro + Parsing.parseAppState
+-- | Carrega a lista de projetos a partir do ficheiro padrão
+loadState :: IO (Either String [Project])
+loadState = undefined  -- TODO: implementar leitura de ficheiro + Parsing.parseProjects
 
 -- | Guarda o estado da aplicação no ficheiro padrão
-saveState :: AppState -> IO (Either String ())
-saveState = undefined  -- TODO: implementar Parsing.showAppState + escrita de ficheiro
+saveState :: [Project] -> IO (Either String ())
+saveState = undefined  -- TODO: implementar Parsing.showProjects + escrita de ficheiro
 
 -- | Carrega dados de demonstração (seed)
-loadSeed :: IO (Either String AppState)
+loadSeed :: IO (Either String [Project])
 loadSeed = undefined  -- TODO: implementar
 
 -- | Guarda dados de demonstração (seed)
-saveSeed :: AppState -> IO (Either String ())
+saveSeed :: [Project] -> IO (Either String ())
 saveSeed = undefined  -- TODO: implementar
 
 -- | Garante que o diretório de dados existe

@@ -6,7 +6,7 @@ License     : MIT
 Maintainer  : exemplo@universidade.pt
 
 Tipos algébricos e records que modelam o domínio de gestão de projetos:
-projetos, sprints, tarefas, membros, etiquetas e estado global da aplicação.
+projetos, sprints, tarefas e membros.
 
 A modelação segue os princípios da Programação Funcional:
 - Tipos de soma (sum types) para estados finitos (TaskStatus, Priority)
@@ -26,12 +26,9 @@ module Model
   , Priority (..)
     -- * Entidades
   , Member (..)
-  , Label (..)
   , Task (..)
   , Sprint (..)
   , Project (..)
-    -- * Estado global
-  , AppState (..)
   ) where
 
 -- | Identificador único de projeto
@@ -68,12 +65,6 @@ data Priority
 data Member = Member
   { memberId   :: MemberId
   , memberName :: String
-  , memberRole :: String
-  } deriving (Eq, Show, Read)
-
--- | Etiqueta associada a tarefas
-data Label = Label
-  { labelName :: String
   } deriving (Eq, Show, Read)
 
 -- | Tarefa individual
@@ -84,7 +75,6 @@ data Task = Task
   , taskStatus      :: TaskStatus
   , taskPriority    :: Priority
   , taskAssignee    :: Maybe MemberId
-  , taskLabels      :: [Label]
   , taskDependsOn   :: [TaskId]
   } deriving (Eq, Show, Read)
 
@@ -106,14 +96,8 @@ data Project = Project
   , projectSprints :: [Sprint]
   } deriving (Eq, Show, Read)
 
--- | Estado global da aplicação: lista de projetos
-data AppState = AppState
-  { projects :: [Project]
-  } deriving (Eq, Show, Read)
-
 -- Nota: os getters são gerados automaticamente pela sintaxe de record:
---   taskStatus, taskPriority, taskAssignee, taskLabels, taskDependsOn :: Task -> ...
+--   taskStatus, taskPriority, taskAssignee, taskDependsOn :: Task -> ...
 --   sprintTasks :: Sprint -> [Task]
 --   projectSprints, projectMembers :: Project -> ...
---   projects :: AppState -> [Project]
 -- Estão disponíveis para uso direto via a exportação dos construtores de record (..)

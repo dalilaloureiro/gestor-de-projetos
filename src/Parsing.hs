@@ -16,12 +16,11 @@ A separação entre 'Parsing' (dados externos -> modelo) e 'Domain'
 -}
 module Parsing
   ( -- * Parsing de ficheiros de estado
-    parseAppState
+    parseProjects
   , parseProject
   , parseSprint
   , parseTask
   , parseMember
-  , parseLabel
     -- * Parsing de entrada do utilizador
   , parseProjectId
   , parseSprintId
@@ -31,21 +30,20 @@ module Parsing
   , parseTaskStatus
   , parseDate
     -- * Serialização (modelo -> texto)
-  , showAppState
+  , showProjects
   , showProject
   , showSprint
   , showTask
   , showMember
-  , showLabel
   ) where
 
 import Model
 
 -- Parsing de ficheiros de estado ----------------------------------------------
 
--- | Parsing do estado completo da aplicação a partir de texto
-parseAppState :: String -> Either String AppState
-parseAppState = undefined  -- TODO: implementar parsing do formato de ficheiro
+-- | Parsing da lista completa de projetos a partir de texto
+parseProjects :: String -> Either String [Project]
+parseProjects = undefined  -- TODO: implementar parsing do formato de ficheiro
 
 -- | Parsing de um projeto
 parseProject :: String -> Either String Project
@@ -62,10 +60,6 @@ parseTask = undefined
 -- | Parsing de um membro
 parseMember :: String -> Either String Member
 parseMember = undefined
-
--- | Parsing de uma etiqueta
-parseLabel :: String -> Either String Label
-parseLabel = undefined
 
 -- Parsing de entrada do utilizador --------------------------------------------
 
@@ -99,9 +93,9 @@ parseDate = undefined
 
 -- Serialização (modelo -> texto) ----------------------------------------------
 
--- | Serializa o estado completo para texto (formato próprio legível)
-showAppState :: AppState -> String
-showAppState = undefined
+-- | Serializa a lista completa de projetos para texto
+showProjects :: [Project] -> String
+showProjects = undefined
 
 -- | Serializa um projeto
 showProject :: Project -> String
@@ -118,7 +112,3 @@ showTask = undefined
 -- | Serializa um membro
 showMember :: Member -> String
 showMember = undefined
-
--- | Serializa uma etiqueta
-showLabel :: Label -> String
-showLabel = undefined

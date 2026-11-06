@@ -10,7 +10,6 @@ Os dados de teste foram desenhados para cobrir:
 - tarefas em diferentes estados
 - prioridades variadas
 - dependências entre tarefas
-- etiquetas para filtros e agrupamentos
 - casos normais e casos limite
 
 ## Estrutura do cenário

@@ -4,7 +4,7 @@ Description : Suite de testes para o núcleo funcional (Domain)
 
 Testes das funções puras principais:
 - Consultas (findProject, findSprint, findTask)
-- Filtros (por estado, prioridade, responsável, etiqueta)
+- Filtros (por estado, prioridade e responsável)
 - Recursão justificada: progressSprint, progressProject, isBlocked
 - Transições de estado
 - Casos normais, limites (listas vazias) e erros
@@ -21,10 +21,10 @@ import System.Exit (exitFailure)
 -- Dados de teste mínimos ------------------------------------------------------
 
 testMember1 :: Member
-testMember1 = Member 1 "Alice" "Developer"
+testMember1 = Member 1 "Alice"
 
 testMember2 :: Member
-testMember2 = Member 2 "Bob" "QA"
+testMember2 = Member 2 "Bob"
 
 testProject :: Project
 testProject = Project 1 "Projeto Teste" "Descrição" [testMember1, testMember2] []
@@ -33,10 +33,10 @@ testSprint :: Sprint
 testSprint = Sprint 1 "Sprint 1" "2024-01-01" "2024-01-14" []
 
 testTaskTodo :: Task
-testTaskTodo = Task 1 "Tarefa 1" "Desc" ToDo Medium Nothing [] []
+testTaskTodo = Task 1 "Tarefa 1" "Desc" ToDo Medium Nothing []
 
 testTaskDone :: Task
-testTaskDone = Task 2 "Tarefa 2" "Desc" Done High Nothing [] []
+testTaskDone = Task 2 "Tarefa 2" "Desc" Done High Nothing []
 
 -- Testes ---------------------------------------------------------------------
 
@@ -77,14 +77,6 @@ testFilterByAssignee = TestCase $ do
   let tasks = [taskAssigned, testTaskDone]
   assertEqual "filterByAssignee 1" [taskAssigned] (Domain.filterByAssignee 1 tasks)
   assertEqual "filterByAssignee 999" [] (Domain.filterByAssignee 999 tasks)
-
-testFilterByLabel :: Test
-testFilterByLabel = TestCase $ do
-  let bugLabel = Model.Label "bug"
-  let taskWithLabel = testTaskTodo { taskLabels = [bugLabel] }
-  let tasks = [taskWithLabel, testTaskDone]
-  assertEqual "filterByLabel existente" [taskWithLabel] (Domain.filterByLabel "bug" tasks)
-  assertEqual "filterByLabel inexistente" [] (Domain.filterByLabel "feature" tasks)
 
 testProgressSprintEmpty :: Test
 testProgressSprintEmpty = TestCase $ do
@@ -164,7 +156,6 @@ tests = TestList
   , testFilterByStatus
   , testFilterByPriority
   , testFilterByAssignee
-  , testFilterByLabel
   , testProgressSprintEmpty
   , testProgressSprintAllDone
   , testProgressSprintMixed

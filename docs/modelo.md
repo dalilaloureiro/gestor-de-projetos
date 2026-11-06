@@ -2,16 +2,12 @@
 
 ## 1. Visão Geral
 
-O modelo de domínio do **gestor-de-projetos** representa um sistema de gestão de projetos de desenvolvimento de software com sprints, tarefas, membros e etiquetas. A modelação segue os princípios da programação funcional: tipos de soma para estados finitos, records para entidades, `Maybe` para opcionalidade e listas para relações 1:N.
+O modelo de domínio do **gestor-de-projetos** representa projetos de desenvolvimento de software com sprints, tarefas e membros. A modelação segue os princípios da programação funcional: tipos de soma para estados finitos, records para entidades, `Maybe` para opcionalidade e listas para relações 1:N.
 
 ## 2. Diagrama de Entidades (Mermaid)
 
 ```mermaid
 classDiagram
-    class AppState {
-        +projects: [Project]
-    }
-
     class Project {
         +projectId: ProjectId
         +projectName: String
@@ -35,18 +31,12 @@ classDiagram
         +taskStatus: TaskStatus
         +taskPriority: Priority
         +taskAssignee: Maybe MemberId
-        +taskLabels: [Label]
         +taskDependsOn: [TaskId]
     }
 
     class Member {
         +memberId: MemberId
         +memberName: String
-        +memberRole: String
-    }
-
-    class Label {
-        +labelName: String
     }
 
     class TaskStatus {
@@ -65,11 +55,9 @@ classDiagram
         Critical
     }
 
-    AppState "1" *-- "*" Project
     Project "1" *-- "*" Sprint
     Project "1" *-- "*" Member
     Sprint "1" *-- "*" Task
-    Task "*" -- "*" Label
     Task "1" --> "*" Task : dependsOn
     Task "1" --> "0..1" Member : assignee
 ```
@@ -118,29 +106,14 @@ data Priority = Low | Medium | High | Critical
 data Member = Member
   { memberId   :: MemberId
   , memberName :: String
-  , memberRole :: String
   } deriving (Eq, Show, Read)
 ```
 
 **Justificativa:**
 - Record com campos nomeados para clareza e pattern matching por campo
-- `memberRole` permite distinguir funções (Developer, QA, PO, etc.)
 - Sem `Ord` — membros não têm ordem natural
 
-### 3.5 Label (Record)
-
-```haskell
-data Label = Label
-  { labelName :: String
-  } deriving (Eq, Show, Read)
-```
-
-**Justificativa:**
-- Wrapper simples para string com semântica de domínio
-- Lista `[Label]` em `Task` permite múltiplas etiquetas por tarefa
-- `Eq`/`Show` para comparação e exibição
-
-### 3.6 Task (Record Principal)
+### 3.5 Task (Record Principal)
 
 ```haskell
 data Task = Task
@@ -150,18 +123,16 @@ data Task = Task
   , taskStatus      :: TaskStatus
   , taskPriority    :: Priority
   , taskAssignee    :: Maybe MemberId
-  , taskLabels      :: [Label]
   , taskDependsOn   :: [TaskId]
   } deriving (Eq, Show, Read)
 ```
 
 **Justificativa:**
 - **Maybe MemberId**: tarefa pode não ter responsável atribuído
-- **[Label]**: zero ou mais etiquetas
 - **[TaskId]**: dependências por ID (não referências diretas) — evita ciclos na estrutura de dados e permite serialização simples
 - **Sem `Ord`**: tarefas não se comparam naturalmente
 
-### 3.7 Sprint (Record)
+### 3.6 Sprint (Record)
 
 ```haskell
 data Sprint = Sprint
@@ -177,7 +148,7 @@ data Sprint = Sprint
 - Datas como `String` no formato ISO 8601 — simplicidade na Fase 1; pode evoluir para `Day` (time) na Fase 2/3
 - Lista de tarefas embutida — agregação por valor (não referências)
 
-### 3.8 Project (Record Raiz)
+### 3.7 Project (Record Raiz)
 
 ```haskell
 data Project = Project
@@ -193,18 +164,7 @@ data Project = Project
 - Agrega membros e sprints — entidade raiz do agregado
 - Permite consultas transversais (ex.: todas as tarefas de um membro no projeto)
 
-### 3.9 AppState (Estado Global)
-
-```haskell
-data AppState = AppState
-  { projects :: [Project]
-  } deriving (Eq, Show, Read)
-```
-
-**Justificativa:**
-- Estado global único — lista de projetos
-- Simplicidade: um ficheiro de persistência = um `AppState`
-- Extensível: pode adicionar `currentProjectId`, configurações, etc.
+O conjunto de projetos da aplicação é representado diretamente como `[Project]`, sem um wrapper adicional.
 
 ## 4. Relações e Navegação
 
@@ -214,7 +174,6 @@ data AppState = AppState
 | Project → Members | 1:N | `projectMembers :: Project -> [Member]` |
 | Sprint → Tasks | 1:N | `sprintTasks :: Sprint -> [Task]` |
 | Task → Assignee | 0:1 | `taskAssignee :: Task -> Maybe MemberId` |
-| Task → Labels | 0:N | `taskLabels :: Task -> [Label]` |
 | Task → DependsOn | 0:N | `taskDependsOn :: Task -> [TaskId]` |
 
 **Decisão:** Usar IDs (`TaskId`, `MemberId`) em vez de referências diretas (`Task`, `Member`) nas relações:
@@ -267,11 +226,9 @@ data AppState = AppState
 | TaskStatus | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ |
 | Priority | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ |
 | Member | ✓ | ✓ | ✓ |   |   |   |
-| Label | ✓ | ✓ | ✓ |   |   |   |
 | Task | ✓ | ✓ | ✓ |   |   |   |
 | Sprint | ✓ | ✓ | ✓ |   |   |   |
 | Project | ✓ | ✓ | ✓ |   |   |   |
-| AppState | ✓ | ✓ | ✓ |   |   |   |
 
 ---
 

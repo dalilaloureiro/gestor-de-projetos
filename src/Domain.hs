@@ -20,7 +20,6 @@ module Domain
   , mkSprint
   , mkTask
   , mkMember
-  , mkLabel
     -- * Consultas básicas (retornam Maybe)
   , findProject
   , findSprint
@@ -35,7 +34,6 @@ module Domain
   , filterByStatus
   , filterByPriority
   , filterByAssignee
-  , filterByLabel
     -- * Recursão justificada #1: progresso de sprint
   , progressSprint
     -- * Recursão justificada #2: progresso de projeto
@@ -78,20 +76,14 @@ mkTask :: TaskId -> String -> String -> Priority -> [TaskId] -> Either String Ta
 mkTask tid title desc priority deps
   | tid <= 0      = Left "ID da tarefa deve ser positivo"
   | null title    = Left "Título da tarefa não pode ser vazio"
-  | otherwise     = Right $ Task tid title desc ToDo priority Nothing [] deps
+  | otherwise     = Right $ Task tid title desc ToDo priority Nothing deps
 
 -- | Cria um membro
-mkMember :: MemberId -> String -> String -> Either String Member
-mkMember mid name role
+mkMember :: MemberId -> String -> Either String Member
+mkMember mid name
   | mid <= 0   = Left "ID do membro deve ser positivo"
   | null name  = Left "Nome do membro não pode ser vazio"
-  | otherwise  = Right $ Member mid name role
-
--- | Cria uma etiqueta
-mkLabel :: String -> Either String Label
-mkLabel name
-  | null name  = Left "Nome da etiqueta não pode ser vazio"
-  | otherwise  = Right $ Label name
+  | otherwise  = Right $ Member mid name
 
 -- Consultas básicas -----------------------------------------------------------
 
@@ -114,8 +106,8 @@ findMember mid project = find ((== mid) . memberId) (projectMembers project)
 -- Listagens -------------------------------------------------------------------
 
 -- | Lista todos os projetos
-listProjects :: AppState -> [Project]
-listProjects = projects
+listProjects :: [Project] -> [Project]
+listProjects = id
 
 -- | Lista sprints de um projeto
 listSprintsOfProject :: Project -> [Sprint]
@@ -142,10 +134,6 @@ filterByPriority priority = filter (\t -> taskPriority t == priority)
 -- | Filtra tarefas por responsável
 filterByAssignee :: MemberId -> [Task] -> [Task]
 filterByAssignee mid = filter (\t -> taskAssignee t == Just mid)
-
--- | Filtra tarefas por etiqueta
-filterByLabel :: String -> [Task] -> [Task]
-filterByLabel lblName = filter (\t -> any (\l -> labelName l == lblName) (taskLabels t))
 
 -- Recursão justificada #1: progresso de sprint --------------------------------
 

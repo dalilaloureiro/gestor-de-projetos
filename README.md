@@ -5,7 +5,7 @@
 
 Equipas pequenas de desenvolvimento de software gerem frequentemente os seus projetos através de folhas de cálculo, listas dispersas ou ferramentas demasiado pesadas para o contexto. Isto dificulta a visão consolidada do estado das tarefas, a priorização, a deteção de bloqueios e a medição do progresso por sprint.
 
-O **gestor-de-projetos** pretende resolver este problema oferecendo uma aplicação de linha de comandos, em Haskell, que permite modelar projetos, tarefas, sprints e etiquetas, aplicar regras de negócio explícitas (transições de estado, prioridades, dependências) e gerar relatórios úteis para a equipa.
+O **gestor-de-projetos** pretende resolver este problema oferecendo uma aplicação de linha de comandos, em Haskell, que permite modelar projetos, tarefas e sprints, aplicar regras de negócio explícitas (transições de estado, prioridades, dependências) e gerar relatórios úteis para a equipa.
 
 ---
 
@@ -36,17 +36,16 @@ O **gestor-de-projetos** pretende resolver este problema oferecendo uma aplicaç
 - Criar, listar e consultar **projetos**.
 - Criar, listar e consultar **sprints** associados a um projeto.
 - Criar, listar e consultar **tarefas** associadas a um sprint.
-- Criar e associar **etiquetas** a tarefas.
 - Atribuir tarefas a membros da equipa.
 
 ### 5.2 Regras de domínio
 - Transição de estados de tarefa com validação (`ToDo → InProgress → Review → Done`, com regras explícitas).
-- Cálculo de prioridade efetiva (prioridade base + etiquetas + proximidade do prazo).
+- Cálculo de prioridade efetiva (prioridade base + proximidade do prazo).
 - Deteção de tarefas **bloqueadas** (dependências não concluídas).
 - Cálculo de progresso de sprint e de projeto (percentagem de tarefas concluídas, pontos, etc.).
 
 ### 5.3 Consulta e filtragem
-- Filtrar tarefas por estado, prioridade, etiqueta, responsável ou sprint.
+- Filtrar tarefas por estado, prioridade, responsável ou sprint.
 - Pesquisar tarefas por texto no título/descrição.
 - Listar tarefas atribuídas a um membro.
 
@@ -73,7 +72,6 @@ O projeto inclui um conjunto de dados de demonstração em `data/seed.hs` com:
 - 2 sprints distintos
 - 9 tarefas com estados, prioridades e dependências variadas
 - 4 membros da equipa
-- etiquetas para filtro e organização
 
 Estes dados permitem testar cenários reais de:
 
@@ -167,7 +165,7 @@ flowchart TD
 | Tipo | Descrição |
 |---|---|
 | **Entrada** | Menu textual no terminal (opções numéricas), dados introduzidos pelo utilizador (títulos, prioridades, IDs). |
-| **Ficheiros** | Ficheiro de estado (ex.: `data/state.txt` ou `data/state.json`) com a serialização do `AppState`. Ficheiro de dados de demonstração (`data/seed.*`). |
+| **Ficheiros** | Ficheiro de estado (ex.: `data/state.txt` ou `data/state.json`) com a serialização da lista de projetos. Ficheiro de dados de demonstração (`data/seed.*`). |
 | **Saída** | Listagens formatadas no terminal, relatórios em texto, mensagens de erro claras (`Either`). |
 | **Formato de persistência** | Formato simples e legível (texto estruturado ou CSV próprio), com parsing explícito e validação. |
 
@@ -177,7 +175,7 @@ flowchart TD
 
 | Conceito | Onde aparece no projeto |
 |---|---|
-| **ADTs e records** | `TaskStatus`, `Priority`, `Task`, `Sprint`, `Project`, `AppState`. |
+| **ADTs e records** | `TaskStatus`, `Priority`, `Member`, `Task`, `Sprint`, `Project`. |
 | **Pattern matching** | Transições de estado, formatação de relatórios, parsing. |
 | **Recursão** | Percorrer listas de projetos/sprints/tarefas, deteção de dependências (possivelmente recursiva), cálculo de progresso. |
 | **Funções de ordem superior** | Filtros combináveis de tarefas, critérios de ordenação, funções de transformação de relatórios. |
