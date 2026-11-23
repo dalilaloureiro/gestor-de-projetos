@@ -11,13 +11,22 @@ tipos -> listas/estruturas -> pattern matching -> recursão -> núcleo do domín
 
 Entregáveis obrigatórios da Fase 1:
 
-- [ ] Modelo de domínio (data types, records, relações)
-- [ ] Estrutura do projeto (módulos iniciais e repositório)
-- [ ] Funções essenciais puras (regras de domínio)
-- [ ] Recursão justificada
-- [ ] Dados de teste pequenos
+- [x] Modelo de domínio (data types, records, relações)
+- [x] Estrutura do projeto (módulos iniciais e repositório)
+- [x] Funções essenciais puras (regras de domínio)
+- [x] Recursão justificada
+- [x] Dados de teste pequenos
 - [x] README inicial
 - [x] Histórico Git
+
+### Fora do âmbito da Fase 1
+
+Para manter a fase alinhada com o framework, fica explicitamente para a Fase 2:
+
+- Smart constructors com `Either` (`mkProject`, `mkTask`, …)
+- Transições de estado validadas (`validTransitions`, `canTransition`, `transitionTask`)
+- Prioridade efetiva, agregações com `fold` e pipelines com `map`/`filter`/composição
+- Implementação de `Parsing` e `Persistence` (Fase 3) e de `Reports` (Fase 2); na Fase 1 são stubs com assinaturas
 
 ---
 
@@ -68,13 +77,13 @@ Para evitar bloqueios e sobreposição:
 
 | # | Tarefa | Entregável | Depende de |
 |---|---|---|---|
-| B1 | Funções de criação/consulta: `findProject`, `findSprint`, `findTask` por ID (retornam `Maybe`) | `src/Domain.hs` | A1 |
-| B2 | Listagens puras: listar projetos, sprints de um projeto, tarefas de um sprint | `src/Domain.hs` | A1 |
+| B1 | Funções de consulta: `findProject`, `findSprint`, `findTask`, `findMember` por ID (retornam `Maybe`) | `src/Domain.hs` | A1 |
+| B2 | Listagens puras: listar projetos, sprints de um projeto, tarefas de um sprint, membros de um projeto | `src/Domain.hs` | A1 |
 | B3 | Filtros simples: por estado, por prioridade, por responsável | `src/Domain.hs` | A1 |
 | B4 | **Recursão justificada #1**: cálculo de progresso de um sprint (percorrer tarefas e contar `Done`) | `progressSprint` em `Domain.hs` | B1 |
 | B5 | **Recursão justificada #2**: cálculo de progresso de um projeto (percorrer sprints) | `progressProject` em `Domain.hs` | B4 |
 | B6 | **Recursão justificada #3**: verificação de dependências de uma tarefa (percorrer `taskDependsOn` e verificar se estão `Done`) | `isBlocked` em `Domain.hs` | B1 |
-| B7 | Funções auxiliares de formatação pura (ex.: `showStatus`, `showPriority`) | `Domain.hs` ou `Reports.hs` (stub) | A2 |
+| B7 | Funções auxiliares de formatação pura (`showStatus`, `showPriority`) | `Domain.hs` | A2 |
 | B8 | Assinaturas explícitas em todas as funções implementadas | `Domain.hs` | — |
 
 **Critérios de conclusão:**
@@ -95,11 +104,11 @@ Para evitar bloqueios e sobreposição:
 
 | # | Tarefa | Entregável | Depende de |
 |---|---|---|---|
-| C1 | Definir um pequeno conjunto de dados de teste (1 projeto, 2 sprints, ~8 tarefas com estados/prioridades variados e dependências) | `data/seed.hs` (valores Haskell) | A1 |
+| C1 | Definir um pequeno conjunto de dados de teste (1 projeto, 2 sprints, ~9 tarefas com estados/prioridades variados e dependências) | `data/Seed.hs` (valores Haskell, compilado com a suite de testes) | A1 |
 | C2 | Documentar os dados de teste (o que cada cenário cobre) | `docs/dados_teste.md` | C1 |
-| C3 | Configurar a suite de testes (`test/Spec.hs`) com framework simples (ex.: `HUnit` ou testes manuais com `assert`) | `test/Spec.hs` compilável | A3 |
-| C4 | Testes das funções de consulta (`findProject`, `findSprint`, `findTask`) — caso existente e caso inexistente (`Nothing`) | `test/Spec.hs` | B1 |
-| C5 | Testes das funções recursivas: `progressSprint`, `progressProject`, `isBlocked` — casos normais e limites (sprint vazio, todas `Done`, dependência não concluída) | `test/Spec.hs` | B4–B6 |
+| C3 | Configurar a suite de testes (`test/Spec.hs`) com HUnit | `test/Spec.hs` compilável | A3 |
+| C4 | Testes das funções de consulta (`findProject`, `findSprint`, `findTask`, `findMember`) — caso existente e caso inexistente (`Nothing`) | `test/Spec.hs` | B1 |
+| C5 | Testes das funções recursivas: `progressSprint`, `progressProject`, `isBlocked` — casos normais e limites (sprint vazio, todas `Done`, dependência não concluída, dependência inexistente) | `test/Spec.hs` | B4–B6 |
 | C6 | Documentação de suporte à apresentação da Fase 1 (guião curto: o que mostrar, por que ordem) | `docs/guiao_fase1.md` | A6, B8 |
 | C7 | Apoiar A na revisão do `README.md` (secção de testes e dados) | `README.md` | A7 |
 
@@ -127,15 +136,16 @@ Para evitar bloqueios e sobreposição:
 
 Antes da apresentação, o grupo deve conseguir marcar todos:
 
-- [ ] `cabal build` passa sem erros nem warnings relevantes.
-- [ ] `cabal test` passa.
-- [ ] `src/Model.hs` contém todos os ADTs e records previstos, com derivações adequadas.
-- [ ] Todas as funções em `Domain.hs` têm assinatura explícita.
-- [ ] Existem pelo menos 3 funções recursivas justificadas por comentário.
-- [ ] Pattern matching é usado nas funções de domínio.
-- [ ] `data/seed.hs` (ou equivalente) permite demonstrar o sistema.
-- [ ] `README.md` explica objetivo, compilação, execução e estrutura.
-- [ ] `docs/modelo.md` justifica as decisões de modelação.
+- [x] `cabal build` passa sem erros nem warnings relevantes.
+- [x] `cabal test` passa (24 casos).
+- [x] `src/Model.hs` contém todos os ADTs e records previstos, com derivações adequadas.
+- [x] Todas as funções em `Domain.hs` têm assinatura explícita.
+- [x] Existem pelo menos 3 funções recursivas justificadas por comentário.
+- [x] Pattern matching é usado nas funções de domínio.
+- [x] `data/Seed.hs` compila com a suite de testes e permite demonstrar o sistema.
+- [x] `README.md` explica objetivo, compilação, execução e estrutura.
+- [x] `docs/modelo.md` justifica as decisões de modelação.
+- [x] `docs/guiao_fase1.md` permite apresentar a Fase 1 em ≤5 minutos.
 
 
 

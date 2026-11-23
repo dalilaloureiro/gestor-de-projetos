@@ -79,26 +79,26 @@ type MemberId  = Int
 
 ```haskell
 data TaskStatus = ToDo | InProgress | Review | Done
-  deriving (Eq, Show, Read, Enum, Bounded, Ord)
+  deriving (Eq, Show, Read, Enum, Bounded)
 ```
 
 **Justificativa:**
 - **Sum type** modela máquina de estados finita com 4 estados bem definidos
-- **Ord derivado** permite ordenação natural: `ToDo < InProgress < Review < Done`
 - **Enum/Bounded** permitem iteração e validação de limites
-- Transições válidas codificadas em `Domain.validTransitions` (não no tipo, para flexibilidade)
+- **Sem `Ord`**: a ordem declarada não é uma ordem semântica relevante para o domínio
+- As transições permitidas entre estados são uma regra de domínio a implementar na Fase 2
 
 ### 3.3 Priority (Sum Type)
 
 ```haskell
 data Priority = Low | Medium | High | Critical
-  deriving (Eq, Show, Read, Enum, Bounded, Ord)
+  deriving (Eq, Show, Read, Enum, Bounded)
 ```
 
 **Justificativa:**
-- **Ord derivado** essencial para comparação de prioridade (ex.: `High > Medium`)
 - **Enum/Bounded** para iteração e validação
-- Ordem semântica natural: `Low < Medium < High < Critical`
+- A ordem declarada é semântica: `Low < Medium < High < Critical` (usada na Fase 2 para comparações)
+- **Sem `Ord` na Fase 1**: nenhuma função atual compara prioridades
 
 ### 3.4 Member (Record)
 
@@ -186,7 +186,7 @@ O conjunto de projetos da aplicação é representado diretamente como `[Project
 
 ### 5.1 Por que `Maybe` e não `Either` nos campos?
 - `Maybe MemberId`: ausência de responsável é um estado normal, não erro
-- `Either` reservado para validação de entrada (smart constructors) e parsing
+- `Either` fica reservado para a Fase 2 (validação de entidades e parsing)
 
 ### 5.2 Por que não `newtype` para IDs?
 - Fase 1: simplicidade, foco em ADTs de domínio
@@ -203,10 +203,9 @@ O conjunto de projetos da aplicação é representado diretamente como `[Project
 - `Read`: parsing simples em `Parsing` (formato Haskell nativo)
 - `Enum`/`Bounded`: apenas em sum types finitos (`TaskStatus`, `Priority`)
 
-### 5.5 Smart Constructors em `Domain`
-- Validação centralizada: `mkProject`, `mkTask`, etc. retornam `Either String`
-- Garante que entidades inválidas não existem no núcleo puro
-- `Domain` exporta apenas smart constructors, não construtores de record
+### 5.5 Construtores de Record na Fase 1
+- As entidades são construídas diretamente com os construtores de record (`Project`, `Sprint`, `Task`, `Member`)
+- A validação de dados de entrada (smart constructors com `Either`) é âmbito da Fase 2
 
 ## 6. Extensibilidade Prevista (Fase 2/3)
 
@@ -221,14 +220,14 @@ O conjunto de projetos da aplicação é representado diretamente como `[Project
 
 ## 7. Resumo das Typeclasses Derivadas
 
-| Tipo | Eq | Show | Read | Enum | Bounded | Ord |
-|------|:--:|:----:|:----:|:----:|:-------:|:---:|
-| TaskStatus | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ |
-| Priority | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ |
-| Member | ✓ | ✓ | ✓ |   |   |   |
-| Task | ✓ | ✓ | ✓ |   |   |   |
-| Sprint | ✓ | ✓ | ✓ |   |   |   |
-| Project | ✓ | ✓ | ✓ |   |   |   |
+| Tipo | Eq | Show | Read | Enum | Bounded |
+|------|:--:|:----:|:----:|:----:|:-------:|
+| TaskStatus | ✓ | ✓ | ✓ | ✓ | ✓ |
+| Priority | ✓ | ✓ | ✓ | ✓ | ✓ |
+| Member | ✓ | ✓ | ✓ |   |   |
+| Task | ✓ | ✓ | ✓ |   |   |
+| Sprint | ✓ | ✓ | ✓ |   |   |
+| Project | ✓ | ✓ | ✓ |   |   |
 
 ---
 

@@ -1,27 +1,22 @@
 {-|
 Module      : Domain
-Description : Núcleo funcional puro - regras de domínio e operações sobre o modelo
+Description : Núcleo funcional puro - consultas, listagens, filtros e recursão
 
 
-Funções puras que implementam a lógica de domínio:
-- Criação e validação de entidades
-- Consultas (pesquisa por ID, listagens)
-- Filtros combináveis
+Funções puras que implementam as regras de domínio da Fase 1:
+- Consultas por ID (retornam Maybe)
+- Listagens de entidades
+- Filtros por estado, prioridade e responsável
 - Cálculos de progresso (recursão justificada)
-- Deteção de bloqueios por dependências
-- Transições de estado válidas
+- Deteção de bloqueios por dependências (recursão justificada)
+- Formatação textual de estados e prioridades
 
-Todas as funções são puras (sem IO) e usam Maybe/Either para
-tratamento explícito de ausência e erro.
+Todas as funções são puras (sem IO) e usam Maybe para
+tratamento explícito de ausência.
 -}
 module Domain
-  ( -- * Criação de entidades (smart constructors)
-    mkProject
-  , mkSprint
-  , mkTask
-  , mkMember
-    -- * Consultas básicas (retornam Maybe)
-  , findProject
+  ( -- * Consultas básicas (retornam Maybe)
+    findProject
   , findSprint
   , findTask
   , findMember
@@ -41,10 +36,6 @@ module Domain
     -- * Recursão justificada #3: verificação de bloqueios
   , isBlocked
   , allDependenciesDone
-    -- * Transições de estado
-  , validTransitions
-  , canTransition
-  , transitionTask
     -- * Formatação pura
   , showStatus
   , showPriority
@@ -52,38 +43,6 @@ module Domain
 
 import Data.List (find)
 import Model
-
--- Smart constructors ----------------------------------------------------------
-
--- | Cria um projeto válido (validação básica: nome não vazio, ID > 0)
-mkProject :: ProjectId -> String -> String -> [Member] -> Either String Project
-mkProject pid name desc members
-  | pid <= 0           = Left "ID do projeto deve ser positivo"
-  | null name          = Left "Nome do projeto não pode ser vazio"
-  | otherwise          = Right $ Project pid name desc members []
-
--- | Cria um sprint válido
-mkSprint :: SprintId -> String -> String -> String -> Either String Sprint
-mkSprint sid name start end
-  | sid <= 0      = Left "ID do sprint deve ser positivo"
-  | null name     = Left "Nome do sprint não pode ser vazio"
-  | null start    = Left "Data de início não pode ser vazia"
-  | null end      = Left "Data de fim não pode ser vazia"
-  | otherwise     = Right $ Sprint sid name start end []
-
--- | Cria uma tarefa válida
-mkTask :: TaskId -> String -> String -> Priority -> [TaskId] -> Either String Task
-mkTask tid title desc priority deps
-  | tid <= 0      = Left "ID da tarefa deve ser positivo"
-  | null title    = Left "Título da tarefa não pode ser vazio"
-  | otherwise     = Right $ Task tid title desc ToDo priority Nothing deps
-
--- | Cria um membro
-mkMember :: MemberId -> String -> Either String Member
-mkMember mid name
-  | mid <= 0   = Left "ID do membro deve ser positivo"
-  | null name  = Left "Nome do membro não pode ser vazio"
-  | otherwise  = Right $ Member mid name
 
 -- Consultas básicas -----------------------------------------------------------
 
@@ -199,38 +158,18 @@ allDependenciesDone (depId:deps) allTasks =
 findTaskById :: TaskId -> [Task] -> Maybe Task
 findTaskById tid = find ((== tid) . taskId)
 
--- Transições de estado --------------------------------------------------------
-
--- | Transições válidas: ToDo -> InProgress -> Review -> Done
-validTransitions :: TaskStatus -> [TaskStatus]
-validTransitions ToDo        = [InProgress]
-validTransitions InProgress  = [Review, ToDo]       -- pode voltar para ToDo
-validTransitions Review      = [Done, InProgress]   -- pode voltar para InProgress
-validTransitions Done        = []                   -- estado terminal
-
--- | Verifica se uma transição é válida
-canTransition :: TaskStatus -> TaskStatus -> Bool
-canTransition from to = to `elem` validTransitions from
-
--- | Tenta fazer a transição de estado de uma tarefa
---   Retorna Either com erro ou a tarefa atualizada
-transitionTask :: Task -> TaskStatus -> Either String Task
-transitionTask task newStatus
-  | canTransition (taskStatus task) newStatus = Right task { taskStatus = newStatus }
-  | otherwise = Left $ "Transição inválida: " ++ show (taskStatus task) ++ " -> " ++ show newStatus
-
 -- Formatação pura -------------------------------------------------------------
 
 -- | Representação textual do estado
 showStatus :: TaskStatus -> String
-showStatus ToDo       = "📋 ToDo"
-showStatus InProgress = "🔄 InProgress"
-showStatus Review     = "👀 Review"
-showStatus Done       = "✅ Done"
+showStatus ToDo       = "ToDo"
+showStatus InProgress = "InProgress"
+showStatus Review     = "Review"
+showStatus Done       = "Done"
 
 -- | Representação textual da prioridade
 showPriority :: Priority -> String
-showPriority Low      = "🟢 Low"
-showPriority Medium   = "🟡 Medium"
-showPriority High     = "🟠 High"
-showPriority Critical = "🔴 Critical"
+showPriority Low      = "Low"
+showPriority Medium   = "Medium"
+showPriority High     = "High"
+showPriority Critical = "Critical"

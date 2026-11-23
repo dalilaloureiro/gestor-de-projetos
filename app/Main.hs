@@ -10,7 +10,7 @@ Módulo principal que:
 - Usa 'Persistence' para guardar estado
 - Mantém IO isolado do núcleo funcional
 -}
-module Main where
+module Main (main) where
 
 -- | Função principal
 main :: IO ()

@@ -1,6 +1,13 @@
 -- Dados de demonstração (seed) para o projeto
 
-module Seed where
+module Seed
+  ( membros
+  , tarefasSprint1
+  , tarefasSprint2
+  , sprints
+  , projeto
+  , estadoInicial
+  ) where
 
 import Model
 

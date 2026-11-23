@@ -97,13 +97,27 @@ Tarefas:
 
 ## Como estes dados ajudam os testes
 
+O ficheiro `data/Seed.hs` é compilado com a suite de testes (`cabal test`), pelo que os dados de demonstração são verificados a cada build. O módulo `Seed` exporta `membros`, `tarefasSprint1`, `tarefasSprint2`, `sprints`, `projeto` e `estadoInicial`.
+
 Os dados permitem validar diretamente:
 
-- `findProject` / `findSprint` / `findTask`
+- `findProject` / `findSprint` / `findTask` / `findMember`
 - `filterByStatus` / `filterByPriority` / `filterByAssignee`
 - `progressSprint`
 - `progressProject`
 - `isBlocked`
-- `validTransitions` / `transitionTask`
+
+### Valores esperados sobre o seed
+
+| Expressão | Resultado |
+|---|---|
+| `progressSprint` (Sprint 1) | `40.0` (2 de 5 tarefas `Done`) |
+| `progressSprint` (Sprint 2) | `0.0` (0 de 4 tarefas `Done`) |
+| `progressProject` | `20.0` (média de 40% e 0%) |
+| `isBlocked 4` (Sprint 1) | `True` (depende da tarefa 3, `InProgress`) |
+| `isBlocked 3` (Sprint 1) | `False` (sem dependências) |
+| `filterByStatus Done` (Sprint 1) | 2 tarefas |
+| `filterByPriority High` (Sprint 1) | 3 tarefas |
+| `filterByAssignee 1` (Sprint 1) | 3 tarefas (Alice) |
 
 A combinação de tarefas concluídas, em progresso e por fazer funciona como base para demonstrar o comportamento real do domínio em Haskell.

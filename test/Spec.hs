@@ -3,11 +3,13 @@ Module      : Spec
 Description : Suite de testes para o núcleo funcional (Domain)
 
 Testes das funções puras principais:
-- Consultas (findProject, findSprint, findTask)
+- Consultas (findProject, findSprint, findTask, findMember)
 - Filtros (por estado, prioridade e responsável)
 - Recursão justificada: progressSprint, progressProject, isBlocked
-- Transições de estado
-- Casos normais, limites (listas vazias) e erros
+- Formatação (showStatus, showPriority)
+- Dados de demonstração (módulo Seed) usados como cenário real
+
+Casos normais, limites (listas vazias) e consultas sem resultado.
 
 Framework: HUnit (simples, sem dependências pesadas)
 -}
@@ -16,6 +18,7 @@ module Main (main) where
 import Test.HUnit
 import Model
 import qualified Domain
+import Seed
 import System.Exit (exitFailure)
 
 -- Dados de teste mínimos ------------------------------------------------------
@@ -38,6 +41,17 @@ testTaskTodo = Task 1 "Tarefa 1" "Desc" ToDo Medium Nothing []
 testTaskDone :: Task
 testTaskDone = Task 2 "Tarefa 2" "Desc" Done High Nothing []
 
+-- Acesso aos dados de demonstração (o seed tem sempre 2 sprints)
+seedSprint1 :: Sprint
+seedSprint1 = case sprints of
+  (s:_) -> s
+  []    -> error "Seed sem sprints"
+
+seedSprint2 :: Sprint
+seedSprint2 = case sprints of
+  (_:s:_) -> s
+  _       -> error "Seed sem o segundo sprint"
+
 -- Testes ---------------------------------------------------------------------
 
 testFindProject :: Test
@@ -57,6 +71,19 @@ testFindTask = TestCase $ do
   let sprint = testSprint { sprintTasks = [testTaskTodo, testTaskDone] }
   assertEqual "findTask existente" (Just testTaskTodo) (Domain.findTask 1 sprint)
   assertEqual "findTask inexistente" Nothing (Domain.findTask 999 sprint)
+
+testFindMember :: Test
+testFindMember = TestCase $ do
+  assertEqual "findMember existente" (Just testMember2) (Domain.findMember 2 testProject)
+  assertEqual "findMember inexistente" Nothing (Domain.findMember 999 testProject)
+
+testListagens :: Test
+testListagens = TestCase $ do
+  let proj = testProject { projectSprints = [testSprint] }
+  assertEqual "listProjects" [testProject] (Domain.listProjects [testProject])
+  assertEqual "listSprintsOfProject" [testSprint] (Domain.listSprintsOfProject proj)
+  assertEqual "listMembersOfProject" [testMember1, testMember2] (Domain.listMembersOfProject proj)
+  assertEqual "listTasksOfSprint vazio" [] (Domain.listTasksOfSprint testSprint)
 
 testFilterByStatus :: Test
 testFilterByStatus = TestCase $ do
@@ -129,22 +156,51 @@ testIsBlockedWithMissingDep = TestCase $ do
   let taskDep = testTaskTodo { taskDependsOn = [999] }
   assertBool "isBlocked com dependência inexistente" (Domain.isBlocked 1 [taskDep])
 
-testCanTransition :: Test
-testCanTransition = TestCase $ do
-  assertBool "ToDo -> InProgress" (Domain.canTransition ToDo InProgress)
-  assertBool "InProgress -> Review" (Domain.canTransition InProgress Review)
-  assertBool "Review -> Done" (Domain.canTransition Review Done)
-  assertBool "InProgress -> ToDo (back)" (Domain.canTransition InProgress ToDo)
-  assertBool "Review -> InProgress (back)" (Domain.canTransition Review InProgress)
-  assertBool "Done -> (nada)" (not (Domain.canTransition Done ToDo))
-  assertBool "ToDo -> Review (inválido)" (not (Domain.canTransition ToDo Review))
+testIsBlockedMissingTask :: Test
+testIsBlockedMissingTask = TestCase $ do
+  assertBool "isBlocked de tarefa inexistente" (not (Domain.isBlocked 999 [testTaskTodo]))
 
-testTransitionTask :: Test
-testTransitionTask = TestCase $ do
-  let result = Domain.transitionTask testTaskTodo InProgress
-  assertBool "transitionTask válida" (case result of Right _ -> True; Left _ -> False)
-  let result2 = Domain.transitionTask testTaskTodo Done
-  assertBool "transitionTask inválida" (case result2 of Left _ -> True; Right _ -> False)
+testShowStatusAndPriority :: Test
+testShowStatusAndPriority = TestCase $ do
+  assertEqual "showStatus ToDo" "ToDo" (Domain.showStatus ToDo)
+  assertEqual "showStatus Done" "Done" (Domain.showStatus Done)
+  assertEqual "showPriority Critical" "Critical" (Domain.showPriority Critical)
+  assertEqual "showPriority Low" "Low" (Domain.showPriority Low)
+
+-- Testes sobre os dados de demonstração (Seed) --------------------------------
+
+testSeedFind :: Test
+testSeedFind = TestCase $ do
+  assertEqual "seed: findProject 1" (Just projeto) (Domain.findProject 1 estadoInicial)
+  assertEqual "seed: findSprint 2" (Just seedSprint2) (Domain.findSprint 2 projeto)
+  assertEqual "seed: findTask 4 no Sprint 1" (Just (tarefasSprint1 !! 3)) (Domain.findTask 4 seedSprint1)
+  assertEqual "seed: findMember 4" (Just (membros !! 3)) (Domain.findMember 4 projeto)
+
+testSeedProgressSprint :: Test
+testSeedProgressSprint = TestCase $ do
+  -- Sprint 1: 2 tarefas Done em 5 -> 40%
+  assertEqual "seed: progressSprint 1" 40.0 (Domain.progressSprint seedSprint1)
+  -- Sprint 2: 0 tarefas Done em 4 -> 0%
+  assertEqual "seed: progressSprint 2" 0.0 (Domain.progressSprint seedSprint2)
+
+testSeedProgressProject :: Test
+testSeedProgressProject = TestCase $ do
+  -- média de 40% e 0% -> 20%
+  assertEqual "seed: progressProject" 20.0 (Domain.progressProject projeto)
+
+testSeedBlocked :: Test
+testSeedBlocked = TestCase $ do
+  -- tarefa 4 depende da 3, que está InProgress -> bloqueada
+  assertBool "seed: tarefa 4 bloqueada" (Domain.isBlocked 4 tarefasSprint1)
+  -- tarefa 3 não tem dependências -> não bloqueada
+  assertBool "seed: tarefa 3 desbloqueada" (not (Domain.isBlocked 3 tarefasSprint1))
+
+testSeedFilters :: Test
+testSeedFilters = TestCase $ do
+  assertEqual "seed: filtro Done" 2 (length (Domain.filterByStatus Done tarefasSprint1))
+  assertEqual "seed: filtro High" 3 (length (Domain.filterByPriority High tarefasSprint1))
+  assertEqual "seed: filtro Alice" 3 (length (Domain.filterByAssignee 1 tarefasSprint1))
+  assertEqual "seed: filtro inexistente" [] (Domain.filterByAssignee 99 tarefasSprint1)
 
 -- Suite principal -------------------------------------------------------------
 
@@ -153,6 +209,8 @@ tests = TestList
   [ testFindProject
   , testFindSprint
   , testFindTask
+  , testFindMember
+  , testListagens
   , testFilterByStatus
   , testFilterByPriority
   , testFilterByAssignee
@@ -165,8 +223,13 @@ tests = TestList
   , testIsBlockedWithDoneDep
   , testIsBlockedWithPendingDep
   , testIsBlockedWithMissingDep
-  , testCanTransition
-  , testTransitionTask
+  , testIsBlockedMissingTask
+  , testShowStatusAndPriority
+  , testSeedFind
+  , testSeedProgressSprint
+  , testSeedProgressProject
+  , testSeedBlocked
+  , testSeedFilters
   ]
 
 main :: IO ()

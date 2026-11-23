@@ -11,7 +11,7 @@ author:              Francisco, Dalila, Duarte
 maintainer:          exemplo@universidade.pt
 category:            Application
 build-type:          Simple
-extra-source-files:  README.md, CHANGELOG.md
+extra-source-files:  README.md
 
 source-repository head
   type:     git
@@ -46,8 +46,9 @@ executable gestor-de-projetos
 test-suite test-suite
   import:              common-opts
   type:                exitcode-stdio-1.0
-  hs-source-dirs:      test
+  hs-source-dirs:      test, data
   main-is:             Spec.hs
+  other-modules:       Seed
   build-depends:       base >= 4.14 && < 5
                      , gestor-de-projetos
                      , HUnit >= 1.6

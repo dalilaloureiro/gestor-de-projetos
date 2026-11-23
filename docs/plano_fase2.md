@@ -2,31 +2,53 @@
 
 ## 1. Visão Geral da Fase 2
 
-Objetivo aprofundar o domínio inicial através de boas práticas e mecanismos típicos de Haskell:
+O framework define a Fase 2 como a passagem de um núcleo funcional básico para uma **solução claramente funcional**:
 
 ```
-HOF -> pipelines (map/filter/fold) -> composição -> tratamento de erro -> separação IO
+HOF -> map/filter -> fold -> composição -> Maybe/Either -> lógica da aplicação
 ```
 
-Entregáveis da Fase 2:
+As expectativas do framework (secção 5.2 do PDF) e onde são cumpridas:
 
-- [ ] Maioria da lógica de domínio implementada (transições, prioridade efetiva, deteção de bloqueios)
+| Expectativa do framework | Onde se concretiza |
+|---|---|
+| **Funcionalidades** — maioria da lógica de domínio implementada | A1–A4, B1–B3 |
+| **HOF** — funções que recebem ou devolvem funções | B1, B2, B3 |
+| **Pipelines** — `map`, `filter`, `fold` e composição | A3, B2, B3 |
+| **Erros** — tratamento explícito com `Maybe` e/ou `Either` | A2, A4, C3 |
+| **Testes** — casos normais, casos limite e situações de erro | B4, B5, C3 |
+| **Arquitetura** — separação crescente entre lógica funcional e IO | A5 |
+| **Documentação** — README e documentação atualizados | A6, C2, C4, C5 |
+
+Entregáveis da Fase 2 (checklist do framework):
+
+- [ ] Maioria da lógica de domínio implementada
 - [ ] Utilização adequada de funções de ordem superior (HOF)
-- [ ] Uso de pipelines: `map`, `filter`, `folds` e composição quando apropriado
+- [ ] Uso de `map`, `filter`, `fold` e composição quando apropriado
 - [ ] Tratamento explícito de erros com `Maybe` e/ou `Either`
-- [ ] Conjunto de dados de teste que permita ver casos normais, casos limites e situações de erro
-- [ ] Separção crescente entre lógica funcional e IO
-- [ ] README e documentação atualizados
+- [ ] Testes com casos normais, casos limite e situações de erro
+- [ ] Separação crescente entre lógica funcional e IO
+- [ ] `README.md` e documentação atualizados
+
+### Fora do âmbito da Fase 2
+
+O framework coloca estas matérias na **Fase 3** (secção 5.3: `entrada/ficheiros -> parsing/validação -> núcleo funcional -> saída/relatórios`). Não entram na Fase 2:
+
+- Implementação de `Parsing.hs` (parsing de ficheiros e de entrada do utilizador)
+- Implementação de `Persistence.hs` (leitura/escrita de ficheiros)
+- Menu textual e qualquer IO em `app/Main.hs`
+- Relatórios impressos no terminal (a formatação pura em `Reports.hs` **é** Fase 2; o IO à volta dela não)
+- Conversão de datas `String` → `Day` (dependência `time`) e `newtype` para IDs
+
+Princípio orientador do framework (secção 13): *"O objetivo não é maximizar a quantidade de código"*. Cada tarefa abaixo existe para evidenciar um conceito pedido, não para aumentar a funcionalidade.
 
 ---
 
 ## 2. Princípios de Divisão de Trabalho (continuidade da Fase 1)
 
-Mesmas regras de colaboração da Fase 1 se aplicam:
-
-1. **Elemento A é o "dono da lógica funcional pura"** — garante que as funções principais respectivas estejam coerentes com o modelo definido na Fase 1.
-2. **Contrato de tipos mantido**: B e C continuam a trabalhar contra o contrato de `Model.hs` e `Domain.hs` definido por A.
-3. **Cada elemento tem um módulo principal claro** (ver secção 3).
+1. **Elemento A é o "dono da lógica funcional pura"** — garante que as funções principais estejam coerentes com o modelo definido na Fase 1.
+2. **Contrato de tipos mantido**: B e C trabalham contra o contrato de `Model.hs` e `Domain.hs` definido por A. Alterações de assinatura exigem aviso prévio.
+3. **Sem trabalho duplicado**: cada função tem um único dono. Agregações com `fold` são do A (A3); B consome-as nos pipelines e relatórios.
 4. **Integração contínua manual**: commits frequentes, branches curtos, merge para `main` só com build a passar.
 5. **Revisão cruzada obrigatória**: cada PR é revisto por pelo menos outro elemento.
 6. **Reunião curta semanal** (15–30 min) para sincronizar e desbloquear.
@@ -35,160 +57,125 @@ Mesmas regras de colaboração da Fase 1 se aplicam:
 
 ## 3. Atribuição por Elemento
 
-### Elemento A (Francisco) — Lógica de Domínio Avançada e Integração
+### Elemento A (Francisco) — Lógica de Domínio Pura, `fold` e `Either`
 
-**Responsabilidade central:** implementar a maioria da lógica de domínio restante, garantir transições de estado robustas, prioridade efetiva e separação crescente entre lógica funcional e IO.
+**Responsabilidade central:** completar a lógica de domínio que falta, com `fold` para agregações e `Either` para erros, mantendo `Domain.hs` puro.
 
 | # | Tarefa | Entregável | Depende de |
 |---|---|---|---|
-| A1 | Implementar cálculo de **prioridade efetiva** (prioridade base + fator de proximidade de prazo) em função pura | `src/Domain.hs` | A2 |
-| A2 | Implementar validação e transição de estado **com `Either` detalhado** (mensagens de erro explicativas) | `src/Domain.hs` (funções `transitionTask`, `canTransition`, novas) | A1 |
-| A3 | Criar funções de **agregação com `fold`** sobre listas de tarefas/sprints/projetos (ex.: `calculateEffort`, `totalPriorityScore`) | `src/Domain.hs` | A1 |
-| A4 | Mover/garantir que toda a lógica IO (leitura/escrita de ficheiros, parsing) fique isolada nos módulos `Parsing` e `Persistence`; funções de `Domain` devem permanecer puras | `src/Domain.hs` limpo (sem `import` de IO) | A3 |
-| A5 | Atualizar assinaturas explícitas em todas as funções novas/ modificadas | `src/Domain.hs` | A1–A4 |
-| A6 | Documentar as novas funções adicionadas (assinatura + comentário curto) | `docs/documentacao_fase2.md` | A1–A5 |
+| A1 | **Prioridade efetiva** em função pura: `effectivePriority :: Task -> Int -> Priority`, onde `Int` = dias restantes até ao fim do sprint (ex.: ≤3 dias sobe um nível, com saturação em `Critical`). O cálculo dos dias a partir de `sprintEnd` é Fase 3, por isso entra como argumento — mantém a função pura e testável | `src/Domain.hs` | — |
+| A2 | **Transições de estado com `Either`**: `validTransitions`, `canTransition`, `transitionTask :: Task -> TaskStatus -> Either String Task`, com mensagens de erro explicativas | `src/Domain.hs` | — |
+| A3 | **Agregações com `fold`**: `countByStatus`, `totalPriorityScore`, `calculateEffort` (usar `foldr`/`foldl'` de forma natural, com comentário a justificar) | `src/Domain.hs` | — |
+| A4 | **Validação de dependências com `Either`**: `validateDependencies :: [TaskId] -> [Task] -> Either String [TaskId]` para IDs inexistentes. **Não alterar** `isBlocked :: TaskId -> [Task] -> Bool` (contrato da Fase 1, já testado) | `src/Domain.hs` | — |
+| A5 | Garantir que `Domain.hs` **não importa módulos de IO** (`System.IO`, `System.Directory`, …) e que todas as funções novas têm assinatura explícita | `src/Domain.hs` | A1–A4 |
+| A6 | Documentar as funções novas/alteradas (assinatura + justificação) | `docs/documentacao_fase2.md` | A1–A5 |
 
 **Critérios de conclusão:**
-- `cabal build` passa sem erros.
-- Todas as funções de transição e validação retornam `Either String` com mensagens significativas.
-- Funções de agregação usam `foldl'` ou `foldr` de forma natural.
-- `Domain.hs` não contém importações de módulos de IO (a não ser maybe/Either para tratamento de erro).
-- Documentação em `docs/documentacao_fase2.md` cobre todas as novas funções.
+- `cabal build` passa sem erros nem warnings.
+- `transitionTask` e `validateDependencies` devolvem `Either String` com mensagens significativas.
+- As agregações usam `fold` de forma natural (não `sum`/`length` disfarçados).
+- `Domain.hs` sem imports de IO.
+- `docs/documentacao_fase2.md` cobre todas as funções novas.
 
 **Riscos:**
-- Vazar `IO` para `Domain.hs` → fazer revisão de código cruzada e garantir que apenas `Parsing`/`Persistence` lidam com IO.
-- Modelo de prioridade muito complexo → começar com fator simples (ex.: dias até ao fim multiplicado por nível numérico da prioridade).
+- Prioridade efetiva a depender de datas → mantê-la pura, recebendo os dias como argumento; não introduzir `time` na Fase 2.
+- Alterar `isBlocked` e quebrar os 24 testes da Fase 1 → criar `validateDependencies` ao lado, não em vez.
 
 ---
 
-### Elemento B (Dalila) — Funções de Ordem Superior, Pipelines e Testes
+### Elemento B (Dalila) — HOF, Pipelines e Testes
 
-**Responsabilidade central:** introduzir e aplicar HOF, pipelines `map`/`filter`/`fold` e compostura, além de expandir a suite de testes com casos normais, limites e erros.
+**Responsabilidade central:** aplicar HOF, `map`/`filter`/composição e expandir a suite de testes com casos normais, limite e erro.
 
 | # | Tarefa | Entregável | Depende de |
 |---|---|---|---|
-| B1 | Reescrever/upgrade das funções de **filtro** usando `filter` e composição de predicados em vez de `λ` explícito onde apropriado | `src/Domain.hs` (funções `filterByStatus`, `filterByPriority`, `filterByAssignee`) | A1 |
-| B2 | Implementar funções de **agregação combinatória** com `map` e `fold` (ex.: `totalPriorityScore`, `averagePriority`, `countByStatus) | `src/Domain.hs` | A3 |
-| B3 | Implementar **função de formatação de relatório** usando pipeline: `map` para transformar tarefas → strings, `filter` para selecionar, `fold` para concatenar | `src/Reports.hs` (novo ou upgrade) | A2, A3 |
-| B4 | Expandir a suite de testes (`test/Spec.hs`) com novos testes que cubram: casos normais, limites (listas vazias) e situações de erro (IDs inexistentes, transições inválidas) usando HUnit | `test/Spec.hs` | B1–B3 |
-| B5 | Adicionar testes de **propriedades** (QuickCheck, se houver tempo) ou pelo menos 5 novos casos de teste HUnit | `test/Spec.hs` | B4 |
-| B6 | Garantir que todas as funções implementadas tenham assinatura explícita e comentário a justificar o uso de HOF/fold quando apropriado | `src/Domain.hs`, `src/Reports.hs` | B1–B5 |
+| B1 | **Filtros como HOF**: `filterBy :: (Task -> Bool) -> [Task] -> [Task]` e reescrita de `filterByStatus`/`filterByPriority`/`filterByAssignee` como composições de predicados (`filter (isStatus Done)`, sem `λ` explícito) | `src/Domain.hs` | A5 |
+| B2 | **Pipelines com `map` e composição**: funções de transformação (`taskTitles`, `tasksOfMember`) e pelo menos um pipeline no estilo `map f . filter p` | `src/Domain.hs` | B1 |
+| B3 | **Relatórios puros em `Reports.hs`**: `formatPercentage`, `formatTaskLine`, `sprintReport`, `memberReport` construídos com `map` (tarefas → linhas), `filter` (seleção) e `fold`/`concat` (junção). Sem IO | `src/Reports.hs` | A3, B2 |
+| B4 | **Testes dos casos normais e limite** das funções novas (sprints/projetos vazios, todas `Done`, membro sem tarefas) | `test/Spec.hs` | A1–A3, B1–B3 |
+| B5 | **Testes das situações de erro**: `Left` em transições inválidas e em dependências inexistentes; `Nothing` em consultas falhadas. Mínimo 5 casos novos HUnit | `test/Spec.hs` | B4, A2, A4 |
+| B6 | Assinaturas explícitas em tudo o que for novo e comentário a justificar a HOF/`fold` usada | `src/Domain.hs`, `src/Reports.hs` | B1–B5 |
 
 **Critérios de conclusão:**
 - Pelo menos 3 funções novas ou reestruturadas usam `map`, `filter` ou `fold` de forma natural.
-- Pipelines de composição são usados: ex.: `filter status . filter priority` ou `map showStatus . filter (byAssignee mid)`.
-- Suite de testes `cabal test` passa com cobertura aumentada.
-- Pelo menos 5 novos testes HUnit adicionados (casos normais + limites + erros).
+- Existe pelo menos um pipeline por composição (`.`).
+- `cabal test` passa, com cobertura de `Just`/`Nothing` e `Right`/`Left`.
+- Pelo menos 5 testes HUnit novos.
 
 **Riscos:**
-- Forçar `fold` onde `map/filter` seriam mais claros → revisar com o elemento A para garantir que a recursão/fold está justificada.
-- Sobrecarga de pipelines encadeados → manter pipelines curtos e bem nomeados.
+- Forçar `fold` onde `map`/`filter` são mais claros → validar com A antes do PR.
+- Pipelines longos e ilegíveis → funções pequenas e bem nomeadas.
+
+**Opcional (não obrigatório):** testes de propriedade com QuickCheck. Só se o resto estiver concluído; acrescenta uma dependência e não é exigido pelo framework.
 
 ---
 
-### Elemento C (Duarte) — Dados de Teste Avançados, Either/Maybe e Documentação
+### Elemento C (Duarte) — Dados de Teste, Casos de Erro e Documentação
 
-**Responsabilidade central:** expandir o conjunto de dados de teste para cobrir casos normais, limites e situações de erro; garantir tratamento explícito com `Either`/`Maybe`; atualizar documentação.
+**Responsabilidade central:** ampliar os dados de demonstração para cobrir casos de erro, e manter a documentação e o guião de apresentação atualizados.
 
 | # | Tarefa | Entregável | Depende de |
 |---|---|---|---|
-| C1 | Ampliar `data/seed.hs` com **cenários de erro**: tarefas com dependências que referenciam IDs inexistentes, transições inválidas, projetos sem sprints, filtros que retornam listas vazias | `data/seed.hs` | A1, A2 |
-| C2 | Adicionar **dados de teste para `Either`/`Maybe`**: exemplos que demonstram erros de parsing, validação de transição inválida, IDs de projeto/sprint/tarefa inexistentes | `data/seed.hs` | C1 |
-| C3 | Documentar os novos cenários de teste (o que cada conjunto de dados cobre) | `docs/dados_teste_fase2.md` | C1–C2 |
-| C4 | Expandir a suite de testes (`test/Spec.hs`) com testes que explicitamente verificam resultados `Just`/`Nothing` e `Right`/`Left` para as novas funcionalidades | `test/Spec.hs` | B4, C1–C3 |
-| C5 | Atualizar `docs/guiao_fase1.md` com notas sobre as novas funcionalidades da Fase 2 (casos de erro, HOF, pipelines) | `docs/guiao_fase1.md` | A6, B6, C6 |
-| C6 | Revisar `README.md` com nova secção "Fase 2 — Lógica Funcional e Transformação de Dados" que descreva as funcionalidades adicionadas e como testá-las | `README.md` | A6, B6, C6 |
+| C1 | Ampliar `data/Seed.hs` com **cenários de erro e limite**: tarefa com dependência a ID inexistente, projeto sem sprints, sprint sem tarefas, tarefa sem responsável, membro sem tarefas | `data/Seed.hs` | A1, A2 |
+| C2 | Documentar os cenários novos (o que cada um cobre e que resultado se espera) | `docs/dados_teste_fase2.md` | C1 |
+| C3 | Testes sobre o `Seed` que verificam explicitamente `Just`/`Nothing` e `Right`/`Left` para os cenários de C1 | `test/Spec.hs` | B4, C1 |
+| C4 | Guião de demonstração da Fase 2 (≤5 min: o que mostrar, por que ordem) | `docs/guiao_fase2.md` | A6, B6 |
+| C5 | Nova secção "Fase 2 — Lógica Funcional e Transformação de Dados" no `README.md`, com o que foi adicionado e como testar | `README.md` | A6, B6 |
 
 **Critérios de conclusão:**
-- `data/seed.hs` contém pelo menos 3 cenários de erro explícitos (ex.: dependência inexistente, transição inválida, prioridade fora de intervalo).
-- Suite de testes cobre casos `Just/Nothing` e `Right/Left` para as novas funcionalidades.
-- Documentos `docs/dados_teste_fase2.md` e `docs/guiao_fase1.md` atualizados.
-- `README.md` reflete as alterações da Fase 2.
+- `data/Seed.hs` tem pelo menos 3 cenários de erro explícitos e continua a compilar com a suite de testes.
+- A suite cobre `Just`/`Nothing` e `Right`/`Left`.
+- `docs/dados_teste_fase2.md` e `docs/guiao_fase2.md` existem; `README.md` atualizado.
 
 **Riscos:**
-- Dados de teste muito grandes → manter o conjunto minimalista mas diversificado (normal + 2+ limites + 2+ erros).
-- Dependência de A/B → C pode escrever testes "especificação" (falham primeiro) e depois alinhar com a implementação.
+- Seed a crescer sem critério → manter minimalista: normal + 2 limites + 2 erros.
+- Dependência de A/B → C pode escrever os testes primeiro (falham) e alinhar depois.
 
 ---
 
-## 4. Regras de Colaboração e Git (continuidade)
+## 4. Regras de Colaboração e Git
 
-- **Branches:** `feat/a1-prioridade`, `feat/b1-filters-hof`, `feat/c2-dados-erro` (ou por tarefa: `feat/a1-prioridade`, etc.)
-- **Commits pequenos e frequentes**, mensagens claras (`feat: adiciona cálculo de prioridade efetiva`, `test: cobre Left para transição inválida`).
+- **Branches:** `feat/a2-transicoes`, `feat/b1-filtros-hof`, `feat/c1-seed-erros`.
+- **Commits pequenos e frequentes**, mensagens claras (`feat: adiciona transitionTask com Either`, `test: cobre Left para dependência inexistente`).
 - **Pull Requests** para `main` com pelo menos 1 revisão de outro elemento.
 
 ---
 
 ## 5. Critérios de Aceitação da Fase 2 (checklist coletivo)
 
-Antes da apresentação, o grupo deve conseguir marcar todos:
-
-- [ ] `cabal build` passa sem erros nem warnings relevantes.
-- [ ] `cabal test` passa.
-- [ ] Lógica de domínio: transições de estado com `Either`, prioridade efetiva, deteção de bloqueios.
-- [ ] Pelo menos 3 funções novas ou reestruturadas usam `map`, `filter` ou `fold` de forma natural.
-- [ ] Pipelines de composição estão presentes (ex.: `filter . filter`, `map . filter`).
-- [ ] Todas as funções de transição retornam `Either String` com mensagens significativas.
-- [ ] `Domain.hs` não contém importações de IO (lógica pura isolada).
-- [ ] `data/seed.hs` cobre casos normais, limites (vazios) e situações de erro (IDs inexistentes, transições inválidas).
-- [ ] Existem pelo menos 7 funções recursivas justificadas por comentário (mantendo herdado da Fase 1 + novas se necessário).
-- [ ] Pattern matching usado nas funções de domínio.
-- [ ] `docs/documentacao_fase2.md` existe e cobre todas as novas funções.
-- [ ] `README.md` atualizado com nova secção de Fase 2.
-- [ ] Guião de demonstração permite apresentar as novas funcionalidades da Fase 2 em ≤5 minutos.
+- [ ] `cabal build` passa sem erros nem warnings.
+- [ ] `cabal test` passa (24 casos herdados + novos).
+- [ ] Transições de estado e validação de dependências devolvem `Either String` com mensagens significativas.
+- [ ] Prioridade efetiva implementada como função pura.
+- [ ] Pelo menos 3 funções usam `map`, `filter` ou `fold` de forma natural.
+- [ ] Existe pelo menos um pipeline por composição (`.`).
+- [ ] `Domain.hs` não importa módulos de IO.
+- [ ] `Reports.hs` produz relatórios puros (sem IO).
+- [ ] Testes cobrem casos normais, limite e erro (`Just`/`Nothing`, `Right`/`Left`).
+- [ ] `data/Seed.hs` cobre casos normais, limite e erro.
+- [ ] `docs/documentacao_fase2.md`, `docs/dados_teste_fase2.md` e `docs/guiao_fase2.md` existem.
+- [ ] `README.md` atualizado com a secção da Fase 2.
+- [ ] Nenhum entregável da Fase 3 (parsing, persistência, menu, IO) foi antecipado.
 
 ---
 
 ## 6. Definição de "Done" por Tarefa
 
-Uma tarefa só está concluída quando:
-
 1. O código compila e os testes passam.
-2. Tem assinatura explícita (funções) e comentários onde necessário.
-3. Foi revista por pelo menos outro elemento (PR aprovado).
-4. Está integrada em `main`.
+2. Tem assinatura explícita e comentários onde necessário.
+3. Foi revisto por pelo menos outro elemento (PR aprovado).
+4. Está integrado em `main`.
 5. Se aplicável, tem teste associado.
-6. Se aplicável, está refletida na documentação (`README`, `docs/`).
+6. Se aplicável, está refletido na documentação (`README`, `docs/`).
 
 ---
 
-## 7. Novas Funcionalidades Esperadas ao Final da Fase 2
+## 7. Resultado Esperado ao Final da Fase 2
 
-Ao terminar a Fase 2, o projeto deverá ter:
-
-1. **Lógica de domínio completa** sobre o modelo inicial:
-   - Transições de estado validadas com `Either` e mensagens de erro.
-   - Cálculo de prioridade efetiva (prioridade base + fator de prazo).
-   - Deteção de bloqueios por dependências (já existia, agora com mais casos de erro).
-
-2. **Funções de ordem superior (HOF) em uso**:
-   - `filter` combinável para filtrar tarefas por estado, prioridade, responsável.
-   - `map` para transformar dados (ex.: tarefas → strings de relatório).
-   - `fold` para agregação (ex.: soma de prioridades, contagem de status).
-   - Composição de funções (`.` ) para pipelines curtos e legíveis.
-
-3. **Pipelines de dados**:
-   - Exemplo: `filterByStatus Done . filterByPriority High` para tarefas altas concluídas.
-   - `map showStatus . filter (byAssignee mid)` para relatório de membro.
-
-4. **Tratamento explícito de erros**:
-   - Criação de entidades (`mkProject`, `mkTask`, etc.) retorna `Either String`.
-   - Transições de estado retornam `Either String` com mensagem explicativa.
-   - Parsing (`Parsing.hs`) usa `Either` para erros de formato.
-   - `Maybe` usado para pesquisas que podem falhar (`findProject`, `findTask`, etc.).
-
-5. **Separção crescente entre lógica funcional e IO**:
-   - `Domain.hs` permanece puro (nenhum `import` de `IO`, `System.IO`, etc.).
-   - `Parsing.hs` e `Persistence.hs` lidam com IO e conversion entre texto e modelo, usando `Either` para erros.
-   - `Main.hs` (app) apenas orquestra IO e chama funções puras de `Domain`.
-
-6. **Dados de teste ricos**:
-   - `data/seed.hs` com 1 projeto, 2 sprints, ~10 tarefas com estados/prioridades/dependências variados.
-   - Cenários de erro explícitos: dependências que referenciam IDs inexistentes, transições inválidas, projetos sem sprints.
-   - Casos limite: listas vazias de projetos/sprints/tarefas, todas as tarefas `Done` ou `ToDo`.
-
-7. **Documentação atualizada**:
-   - `docs/documentacao_fase2.md` com descrição de todas as funções novas/alteradas.
-   - `README.md` com nova secção "Fase 2 — Lógica Funcional e Transformação de Dados".
-   - `docs/dados_teste_fase2.md` com descrição dos novos cenários de teste.
-   - `docs/guiao_fase1.md` atualizado com notas sobre Fase 2.
+1. **Lógica de domínio** — transições de estado com `Either`, prioridade efetiva pura, validação de dependências com `Either`, mantendo `isBlocked` e o resto do contrato da Fase 1.
+2. **HOF** — `filterBy` como função de ordem superior, predicados compostos, `map` para transformações.
+3. **Pipelines** — `map . filter` em `Domain`/`Reports`, `fold` nas agregações.
+4. **Erros** — `Either String` na criação/transição/validação; `Maybe` nas consultas.
+5. **Arquitetura** — `Domain.hs` e `Reports.hs` puros; IO continua fora deles.
+6. **Testes** — casos normais, limite e erro, incluindo os cenários de erro do `Seed`.
+7. **Documentação** — `README.md` com secção de Fase 2, `docs/documentacao_fase2.md`, `docs/dados_teste_fase2.md` e `docs/guiao_fase2.md`.

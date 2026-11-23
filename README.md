@@ -32,6 +32,8 @@ O **gestor-de-projetos** pretende resolver este problema oferecendo uma aplicaç
 
 ## 5. Funcionalidades (versão inicial)
 
+> **Nota:** esta lista descreve o âmbito completo do projeto. Na Fase 1 está implementado apenas o subconjunto descrito na secção 10: modelo de domínio, consultas, listagens, filtros, progresso e deteção de bloqueios. Tudo o resto está marcado como Fase 2/3.
+
 ### 5.1 Gestão de entidades
 - Criar, listar e consultar **projetos**.
 - Criar, listar e consultar **sprints** associados a um projeto.
@@ -66,7 +68,7 @@ O **gestor-de-projetos** pretende resolver este problema oferecendo uma aplicaç
 
 ## 6. Dados de Teste e Validação da Fase 1
 
-O projeto inclui um conjunto de dados de demonstração em `data/seed.hs` com:
+O projeto inclui um conjunto de dados de demonstração no módulo `Seed` (`data/Seed.hs`) com:
 
 - 1 projeto principal
 - 2 sprints distintos
@@ -86,11 +88,11 @@ A documentação complementar está disponível em:
 - `docs/dados_teste.md`
 - `docs/guiao_fase1.md`
 
-A suite HUnit em `test/Spec.hs` pode ser executada com `cabal test`. Cobre consultas por ID (incluindo resultados inexistentes), filtros, transições, progresso de sprint/projeto (incluindo listas vazias) e bloqueios por dependências concluídas, pendentes ou inexistentes.
+A suite HUnit em `test/Spec.hs` pode ser executada com `cabal test` e cobre 24 casos: consultas por ID (incluindo resultados inexistentes), listagens, filtros, progresso de sprint/projeto (incluindo listas vazias), bloqueios por dependências concluídas, pendentes ou inexistentes, e formatação (`showStatus`, `showPriority`). O módulo `Seed` é compilado juntamente com a suite, pelo que os dados de demonstração são validados a cada `cabal test`.
 
 ---
 
-## 7. Exemplo de Fluxo Padrão da Aplicação (baseado no `data/seed.hs`)
+## 7. Exemplo de Fluxo Padrão da Aplicação (baseado no `data/Seed.hs`)
 
 O diagrama abaixo ilustra a jornada do utilizador (Gestor ou Developer) quando a aplicacao estiver completa (Fase 3), num cenario simples: 1 projeto, 1 sprint, 1 tarefa.
 
@@ -178,11 +180,11 @@ flowchart TD
 | **ADTs e records** | `TaskStatus`, `Priority`, `Member`, `Task`, `Sprint`, `Project`. |
 | **Pattern matching** | Transições de estado, formatação de relatórios, parsing. |
 | **Recursão** | Percorrer listas de projetos/sprints/tarefas, deteção de dependências (possivelmente recursiva), cálculo de progresso. |
-| **Funções de ordem superior** | Filtros combináveis de tarefas, critérios de ordenação, funções de transformação de relatórios. |
-| **`map` / `filter` / `fold`** | Pipelines de consulta, agregações de progresso, geração de relatórios. |
-| **Composição** | Pipelines de filtragem e formatação; composição de predicados. |
-| **`Maybe`** | Pesquisa de tarefas/projetos por ID; tarefa sem responsável. |
-| **`Either`** | Validação de transições de estado inválidas, criação de entidades com dados inválidos, parsing de ficheiros. |
+| **Funções de ordem superior** | Fase 2: filtros combináveis e critérios de ordenação. |
+| **`map` / `filter` / `fold`** | Fase 1: `filter` em `filterByStatus`/`filterByPriority`/`filterByAssignee`. Fase 2: pipelines e `fold`. |
+| **Composição** | Fase 2: pipelines de filtragem e formatação. |
+| **`Maybe`** | Pesquisa de tarefas/projetos/sprints/membros por ID; tarefa sem responsável. |
+| **`Either`** | Fase 2: validação de transições de estado e criação de entidades; Fase 3: parsing de ficheiros. |
 | **IO separado do núcleo** | Módulo `Domain` puro; módulo `Main`/`IO` apenas para interação e persistência. |
 | **Modularização** | `Model`, `Domain`, `Parsing`, `Persistence`, `Reports`, `Main`. |
 | **Testes** | Testes das funções puras com casos normais, limites e erros. |
@@ -191,13 +193,13 @@ flowchart TD
 
 ## 10. Plano de Desenvolvimento por Fases (alinhado com o framework)
 
-### Fase 1 — Modelação e núcleo funcional
+### Fase 1 — Modelação e núcleo funcional (concluída)
 - Definir `Model.hs` com ADTs e records principais.
-- Estrutura inicial do repositório e módulos.
-- Funções puras essenciais: criação de entidades, listagem, pesquisa por ID, cálculo simples de progresso.
-- Recursão justificada: percorrer projetos/sprints/tarefas, cálculo de progresso.
-- Dados de teste pequenos (`data/seed.*`).
-- `README.md` inicial e histórico Git.
+- Estrutura inicial do repositório e módulos (`Parsing`, `Persistence`, `Reports` como stubs com assinaturas).
+- Funções puras essenciais: consultas por ID, listagens, filtros, cálculo de progresso e deteção de bloqueios.
+- Recursão justificada: `progressSprint`, `progressProject`, `isBlocked`.
+- Dados de teste pequenos (`data/Seed.hs`) e suite HUnit (`test/Spec.hs`).
+- `README.md`, `docs/modelo.md`, `docs/dados_teste.md`, `docs/guiao_fase1.md` e histórico Git.
 
 ### Fase 2 — Lógica funcional e transformação de dados
 - Implementar a maioria da lógica de domínio: transições de estado, prioridade efetiva, deteção de bloqueios.
@@ -225,17 +227,21 @@ gestor-de-projetos/
 ├── gestor-de-projetos.cabal
 ├── cabal.project
 ├── src/
-│   ├── Model.hs
-│   ├── Domain.hs
-│   ├── Parsing.hs
-│   ├── Persistence.hs
-│   └── Reports.hs
+│   ├── Model.hs        -- tipos de domínio
+│   ├── Domain.hs       -- núcleo funcional puro (Fase 1)
+│   ├── Parsing.hs      -- stub (Fase 3)
+│   ├── Persistence.hs  -- stub (Fase 3)
+│   └── Reports.hs      -- stub (Fase 3)
 ├── app/
-│   └── Main.hs
+│   └── Main.hs         -- ponto de entrada mínimo
 ├── test/
-│   └── Spec.hs
+│   └── Spec.hs         -- suite HUnit (24 casos)
 ├── data/
-│   └── seed.txt
+│   └── Seed.hs         -- dados de demonstração (compilados com os testes)
 └── docs/
-    └── relatorio.pdf
+    ├── modelo.md
+    ├── dados_teste.md
+    ├── guiao_fase1.md
+    ├── plano_fase1.md
+    └── plano_fase2.md
 ```

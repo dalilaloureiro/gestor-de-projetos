@@ -50,16 +50,16 @@ data TaskStatus
   | InProgress
   | Review
   | Done
-  deriving (Eq, Show, Read, Enum, Bounded, Ord)
+  deriving (Eq, Show, Read, Enum, Bounded)
 
 -- | Prioridade de uma tarefa.
---   Ord derivado permite comparação direta: Low < Medium < High < Critical
+--   A ordem declarada é semântica: Low < Medium < High < Critical
 data Priority
   = Low
   | Medium
   | High
   | Critical
-  deriving (Eq, Show, Read, Enum, Bounded, Ord)
+  deriving (Eq, Show, Read, Enum, Bounded)
 
 -- | Membro da equipa
 data Member = Member
