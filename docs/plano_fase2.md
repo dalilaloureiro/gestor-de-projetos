@@ -57,7 +57,7 @@ Princípio orientador do framework (secção 13): *"O objetivo não é maximizar
 
 ## 3. Atribuição por Elemento
 
-### Elemento A (Francisco) — Lógica de Domínio Pura, `fold` e `Either`
+### Elemento A (duarte) — Lógica de Domínio Pura, `fold` e `Either`
 
 **Responsabilidade central:** completar a lógica de domínio que falta, com `fold` para agregações e `Either` para erros, mantendo `Domain.hs` puro.
 
@@ -110,7 +110,7 @@ Princípio orientador do framework (secção 13): *"O objetivo não é maximizar
 
 ---
 
-### Elemento C (Duarte) — Dados de Teste, Casos de Erro e Documentação
+### Elemento C (Francisco) — Dados de Teste, Casos de Erro e Documentação
 
 **Responsabilidade central:** ampliar os dados de demonstração para cobrir casos de erro, e manter a documentação e o guião de apresentação atualizados.
 
