@@ -52,7 +52,7 @@ Três funções recursivas, cada uma com comentário a justificar a recursão:
 |---|---|
 | `progressSprint` (+ `countDoneAndTotal`) | lista de tarefas |
 | `progressProject` (+ `sumSprintProgress`) | lista de sprints |
-| `isBlocked` (+ `allDependenciesDone`) | lista de dependências |
+| `isBlocked` (+ `pendingDependencies`) | lista de dependências |
 
 Demonstração sobre o seed:
 

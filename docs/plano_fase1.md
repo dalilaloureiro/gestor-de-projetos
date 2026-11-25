@@ -82,7 +82,7 @@ Para evitar bloqueios e sobreposição:
 | B3 | Filtros simples: por estado, por prioridade, por responsável | `src/Domain.hs` | A1 |
 | B4 | **Recursão justificada #1**: cálculo de progresso de um sprint (percorrer tarefas e contar `Done`) | `progressSprint` em `Domain.hs` | B1 |
 | B5 | **Recursão justificada #2**: cálculo de progresso de um projeto (percorrer sprints) | `progressProject` em `Domain.hs` | B4 |
-| B6 | **Recursão justificada #3**: verificação de dependências de uma tarefa (percorrer `taskDependsOn` e verificar se estão `Done`) | `isBlocked` em `Domain.hs` | B1 |
+| B6 | **Recursão justificada #3**: verificação de dependências de uma tarefa (percorrer `taskDependsOn` e verificar se estão `Done`) | `pendingDependencies` + `isBlocked` em `Domain.hs` | B1 |
 | B7 | Funções auxiliares de formatação pura (`showStatus`, `showPriority`) | `Domain.hs` | A2 |
 | B8 | Assinaturas explícitas em todas as funções implementadas | `Domain.hs` | — |
 

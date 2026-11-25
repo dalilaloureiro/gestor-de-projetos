@@ -45,7 +45,7 @@ module Domain
   , progressProject
     -- * Recursão justificada #3: verificação de bloqueios
   , isBlocked
-  , allDependenciesDone
+  , pendingDependencies
     -- * Formatação pura
   , showStatus
   , showPriority
@@ -142,15 +142,20 @@ transitionTask task target
 
 -- | Confirma que todos os IDs de dependência existem na lista de tarefas.
 validateDependencies :: [TaskId] -> [Task] -> Either String [TaskId]
-validateDependencies [] _ = Right []
-validateDependencies (depId:depIds) allTasks =
-  case findTaskById depId allTasks of
-    Nothing ->
-      Left ("ID de dependência inexistente: " ++ show depId)
-    Just _ ->
-      case validateDependencies depIds allTasks of
-        Left message -> Left message
-        Right validIds -> Right (depId : validIds)
+validateDependencies depIds allTasks = check (missingDependencies depIds allTasks)
+  where
+    check [] = Right depIds
+    check (badId : _) = Left ("ID de dependência inexistente: " ++ show badId)
+
+-- | IDs de dependência que não correspondem a nenhuma tarefa existente.
+missingDependencies :: [TaskId] -> [Task] -> [TaskId]
+missingDependencies [] _ = []
+missingDependencies (depId : depIds) allTasks
+  | noTask (findTaskById depId allTasks) = depId : missingDependencies depIds allTasks
+  | otherwise = missingDependencies depIds allTasks
+  where
+    noTask Nothing = True
+    noTask (Just _) = False
 
 -- | Conta tarefas num estado específico percorrendo a lista com foldr.
 countByStatus :: TaskStatus -> [Task] -> Int
@@ -217,23 +222,28 @@ sumSprintProgress (s:ss) =
 
 -- Recursão justificada #3: verificação de bloqueios ---------------------------
 
--- | Verifica se uma tarefa está bloqueada (tem dependências não concluídas).
---   Justificação: percorre a lista de dependências recursivamente,
---   consultando o estado de cada dependência na lista de todas as tarefas.
-isBlocked :: TaskId -> [Task] -> Bool
-isBlocked tid allTasks =
-  case findTaskById tid allTasks of
-    Nothing -> False  -- tarefa não existe, não está bloqueada
-    Just task -> not (allDependenciesDone (taskDependsOn task) allTasks)
+-- | Dependências da tarefa que ainda não estão satisfeitas, pela ordem declarada.
+--   Uma dependência conta como satisfeita se existir na lista e estiver 'Done'.
+--   Recursão estrutural sobre a lista de IDs (percorre uma vez, sem inverter).
+pendingDependencies :: Task -> [Task] -> [TaskId]
+pendingDependencies task allTasks = pending (taskDependsOn task)
+  where
+    pending [] = []
+    pending (depId : depIds)
+      | satisfied depId = pending depIds
+      | otherwise = depId : pending depIds
 
--- | Verifica se todas as dependências (lista de TaskId) estão 'Done'.
---   Recursão estrutural sobre a lista de IDs de dependência.
-allDependenciesDone :: [TaskId] -> [Task] -> Bool
-allDependenciesDone [] _ = True
-allDependenciesDone (depId:deps) allTasks =
-  case findTaskById depId allTasks of
-    Nothing   -> False  -- dependência inexistente considera-se não feita
-    Just dep  -> taskStatus dep == Done && allDependenciesDone deps allTasks
+    satisfied depId = isDone (findTaskById depId allTasks)
+    isDone Nothing = False
+    isDone (Just dep) = taskStatus dep == Done
+
+-- | Uma tarefa está bloqueada quando tem pelo menos uma dependência por satisfazer.
+--   Uma tarefa que não existe não está bloqueada.
+isBlocked :: TaskId -> [Task] -> Bool
+isBlocked tid allTasks = blocked (findTaskById tid allTasks)
+  where
+    blocked Nothing = False
+    blocked (Just task) = not (null (pendingDependencies task allTasks))
 
 -- | Busca auxiliar por TaskId numa lista de tarefas (recursiva)
 findTaskById :: TaskId -> [Task] -> Maybe Task
