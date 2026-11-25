@@ -36,10 +36,10 @@ testSprint :: Sprint
 testSprint = Sprint 1 "Sprint 1" "2024-01-01" "2024-01-14" []
 
 testTaskTodo :: Task
-testTaskTodo = Task 1 "Tarefa 1" "Desc" ToDo Medium 2 Nothing []
+testTaskTodo = Task 1 "Tarefa 1" "Desc" ToDo Medium Nothing []
 
 testTaskDone :: Task
-testTaskDone = Task 2 "Tarefa 2" "Desc" Done High 3 Nothing []
+testTaskDone = Task 2 "Tarefa 2" "Desc" Done High Nothing []
 
 -- Acesso aos dados de demonstração (o seed tem sempre 2 sprints)
 seedSprint1 :: Sprint
@@ -163,17 +163,6 @@ testTotalPriorityScore = TestCase $ do
     (Domain.totalPriorityScore tasks)
   assertEqual "lista vazia tem pontuação zero" 0
     (Domain.totalPriorityScore [])
-
-testCalculateEffort :: Test
-testCalculateEffort = TestCase $ do
-  let tasks =
-        [ testTaskTodo { taskEffortPoints = 2 }
-        , testTaskDone { taskEffortPoints = 5 }
-        ]
-  assertEqual "soma os pontos de esforço das tarefas" 7
-    (Domain.calculateEffort tasks)
-  assertEqual "lista vazia tem esforço zero" 0
-    (Domain.calculateEffort [])
 
 testValidateDependencies :: Test
 testValidateDependencies = TestCase $ do
@@ -302,7 +291,6 @@ tests = TestList
   , testTransitionTask
   , testCountByStatus
   , testTotalPriorityScore
-  , testCalculateEffort
   , testValidateDependencies
   , testProgressSprintEmpty
   , testProgressSprintAllDone

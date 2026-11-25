@@ -122,7 +122,6 @@ data Task = Task
   , taskDescription :: String
   , taskStatus      :: TaskStatus
   , taskPriority    :: Priority
-  , taskEffortPoints :: Int
   , taskAssignee    :: Maybe MemberId
   , taskDependsOn   :: [TaskId]
   } deriving (Eq, Show, Read)
@@ -130,7 +129,6 @@ data Task = Task
 
 **Justificativa:**
 - **Maybe MemberId**: tarefa pode não ter responsável atribuído
-- **taskEffortPoints :: Int**: estimativa do esforço da tarefa em story points
 - **[TaskId]**: dependências por ID (não referências diretas) — evita ciclos na estrutura de dados e permite serialização simples
 - **Sem `Ord`**: tarefas não se comparam naturalmente
 

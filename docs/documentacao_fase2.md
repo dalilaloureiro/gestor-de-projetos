@@ -91,20 +91,6 @@ implementação:
 
 A função usa `foldr` para acumular a soma. Uma lista vazia produz `0`.
 
-### Esforço total
-
-```haskell
-calculateEffort :: [Task] -> Int
-```
-
-Soma os pontos de esforço (`taskEffortPoints`) de todas as tarefas usando
-`foldr`. Uma lista vazia produz `0`. Os pontos representam estimativas
-fornecidas para cada tarefa; a função não tenta inferi-los a partir da
-prioridade ou do estado.
-
-O campo `taskEffortPoints :: Int` foi acrescentado ao record `Task`. Os valores
-do seed são estimativas ilustrativas e podem ser ajustados pela equipa.
-
 ## Testes
 
 Os casos de teste em `test/Spec.hs` cobrem as transições permitidas e

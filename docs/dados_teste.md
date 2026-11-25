@@ -25,35 +25,30 @@ Tarefas:
 1. `Configurar repositório`  
    - Estado: `Done`
    - Prioridade: `High`
-   - Esforço estimado: 2 pontos
    - Responsável: Alice
    - Sem dependências
 
 2. `Criar modelo de domínio`  
    - Estado: `Done`
    - Prioridade: `High`
-   - Esforço estimado: 3 pontos
    - Responsável: Alice
    - Sem dependências
 
 3. `Implementar Domain.hs`  
    - Estado: `InProgress`
    - Prioridade: `High`
-   - Esforço estimado: 5 pontos
    - Responsável: Alice
    - Sem dependências
 
 4. `Escrever testes`  
    - Estado: `ToDo`
    - Prioridade: `Medium`
-   - Esforço estimado: 3 pontos
    - Responsável: Bob
    - Depende de tarefa 3
 
 5. `Configurar persistência`  
    - Estado: `ToDo`
    - Prioridade: `Medium`
-   - Esforço estimado: 5 pontos
    - Responsável: David
    - Sem dependências
 
@@ -63,33 +58,26 @@ Tarefas:
 6. `Implementar Parsing.hs`  
    - Estado: `ToDo`
    - Prioridade: `High`
-   - Esforço estimado: 5 pontos
    - Responsável: Alice
    - Sem dependências
 
 7. `Implementar Reports.hs`  
    - Estado: `ToDo`
    - Prioridade: `Medium`
-   - Esforço estimado: 3 pontos
    - Responsável: Carol
    - Depende da tarefa 6
 
 8. `Interface de terminal`  
    - Estado: `ToDo`
    - Prioridade: `Medium`
-   - Esforço estimado: 5 pontos
    - Responsável: David
    - Depende da tarefa 6
 
 9. `Corrigir bug no parsing`  
    - Estado: `ToDo`
    - Prioridade: `Critical`
-   - Esforço estimado: 2 pontos
    - Responsável: Bob
    - Sem dependências
-
-> Os pontos de esforço do seed são estimativas ilustrativas para demonstrar a
-> agregação; não são calculados automaticamente a partir da prioridade.
 
 ## Casos cobertos
 

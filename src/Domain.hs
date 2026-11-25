@@ -39,7 +39,6 @@ module Domain
     -- * Agregações
   , countByStatus
   , totalPriorityScore
-  , calculateEffort
     -- * Recursão justificada #1: progresso de sprint
   , progressSprint
     -- * Recursão justificada #2: progresso de projeto
@@ -175,13 +174,6 @@ totalPriorityScore = foldr addPriorityScore 0
     priorityScore Medium = 2
     priorityScore High = 3
     priorityScore Critical = 4
-
--- | Soma os pontos de esforço das tarefas usando foldr.
-calculateEffort :: [Task] -> Int
-calculateEffort = foldr addEffortPoints 0
-  where
-    addEffortPoints :: Task -> Int -> Int
-    addEffortPoints task total = taskEffortPoints task + total
 
 -- Recursão justificada #1: progresso de sprint --------------------------------
 
