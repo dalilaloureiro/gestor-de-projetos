@@ -36,10 +36,10 @@ testSprint :: Sprint
 testSprint = Sprint 1 "Sprint 1" "2024-01-01" "2024-01-14" []
 
 testTaskTodo :: Task
-testTaskTodo = Task 1 "Tarefa 1" "Desc" ToDo Medium Nothing []
+testTaskTodo = Task 1 "Tarefa 1" "Desc" ToDo Medium 2 Nothing []
 
 testTaskDone :: Task
-testTaskDone = Task 2 "Tarefa 2" "Desc" Done High Nothing []
+testTaskDone = Task 2 "Tarefa 2" "Desc" Done High 3 Nothing []
 
 -- Acesso aos dados de demonstração (o seed tem sempre 2 sprints)
 seedSprint1 :: Sprint
@@ -104,6 +104,90 @@ testFilterByAssignee = TestCase $ do
   let tasks = [taskAssigned, testTaskDone]
   assertEqual "filterByAssignee 1" [taskAssigned] (Domain.filterByAssignee 1 tasks)
   assertEqual "filterByAssignee 999" [] (Domain.filterByAssignee 999 tasks)
+
+testEffectivePriority :: Test
+testEffectivePriority = TestCase $ do
+  assertEqual "mais de três dias mantém prioridade"
+    Medium (Domain.effectivePriority testTaskTodo 4)
+  assertEqual "três dias sobe Medium para High"
+    High (Domain.effectivePriority testTaskTodo 3)
+  assertEqual "prioridade Low sobe para Medium"
+    Medium (Domain.effectivePriority (testTaskTodo { taskPriority = Low }) 2)
+  assertEqual "prioridade High sobe para Critical"
+    Critical (Domain.effectivePriority (testTaskTodo { taskPriority = High }) 1)
+  assertEqual "Critical não sobe acima de Critical"
+    Critical (Domain.effectivePriority (testTaskTodo { taskPriority = Critical }) 0)
+  assertEqual "tarefa atrasada também satisfaz dias restantes <= 3"
+    High (Domain.effectivePriority testTaskTodo (-1))
+
+testTransitionTask :: Test
+testTransitionTask = TestCase $ do
+  assertBool "ToDo -> InProgress permitido"
+    (Domain.canTransition ToDo InProgress)
+  assertBool "InProgress -> Review permitido"
+    (Domain.canTransition InProgress Review)
+  assertBool "Review -> Done permitido"
+    (Domain.canTransition Review Done)
+  assertBool "não permite saltar estados"
+    (not (Domain.canTransition ToDo Done))
+  assertEqual "transição válida atualiza apenas o estado"
+    (Right (testTaskTodo { taskStatus = InProgress }))
+    (Domain.transitionTask testTaskTodo InProgress)
+  assertEqual "repetir o estado atual é inválido"
+    (Left "Transição de estado inválida: ToDo -> ToDo")
+    (Domain.transitionTask testTaskTodo ToDo)
+  assertEqual "não permite voltar atrás"
+    (Left "Transição de estado inválida: InProgress -> ToDo")
+    (Domain.transitionTask (testTaskTodo { taskStatus = InProgress }) ToDo)
+  assertEqual "transição inválida explica o erro"
+    (Left "Transição de estado inválida: ToDo -> Done")
+    (Domain.transitionTask testTaskTodo Done)
+
+testCountByStatus :: Test
+testCountByStatus = TestCase $ do
+  let tasks = [testTaskTodo, testTaskDone]
+  assertEqual "conta tarefas ToDo" 1 (Domain.countByStatus ToDo tasks)
+  assertEqual "conta tarefas Done" 1 (Domain.countByStatus Done tasks)
+  assertEqual "estado sem tarefas dá zero" 0 (Domain.countByStatus Review tasks)
+  assertEqual "lista vazia dá zero" 0 (Domain.countByStatus Done [])
+
+testTotalPriorityScore :: Test
+testTotalPriorityScore = TestCase $ do
+  let tasks =
+        [ testTaskTodo { taskPriority = Low }
+        , testTaskTodo { taskPriority = Medium }
+        , testTaskTodo { taskPriority = High }
+        , testTaskTodo { taskPriority = Critical }
+        ]
+  assertEqual "soma os pontos das quatro prioridades" 10
+    (Domain.totalPriorityScore tasks)
+  assertEqual "lista vazia tem pontuação zero" 0
+    (Domain.totalPriorityScore [])
+
+testCalculateEffort :: Test
+testCalculateEffort = TestCase $ do
+  let tasks =
+        [ testTaskTodo { taskEffortPoints = 2 }
+        , testTaskDone { taskEffortPoints = 5 }
+        ]
+  assertEqual "soma os pontos de esforço das tarefas" 7
+    (Domain.calculateEffort tasks)
+  assertEqual "lista vazia tem esforço zero" 0
+    (Domain.calculateEffort [])
+
+testValidateDependencies :: Test
+testValidateDependencies = TestCase $ do
+  let tasks = [testTaskTodo, testTaskDone]
+  assertEqual "dependências existentes são devolvidas"
+    (Right [2, 1]) (Domain.validateDependencies [2, 1] tasks)
+  assertEqual "lista vazia de dependências é válida"
+    (Right []) (Domain.validateDependencies [] tasks)
+  assertEqual "ID inexistente devolve erro"
+    (Left "ID de dependência inexistente: 99")
+    (Domain.validateDependencies [99] tasks)
+  assertEqual "devolve erro se uma dependência posterior não existe"
+    (Left "ID de dependência inexistente: 99")
+    (Domain.validateDependencies [2, 99] tasks)
 
 testProgressSprintEmpty :: Test
 testProgressSprintEmpty = TestCase $ do
@@ -214,6 +298,12 @@ tests = TestList
   , testFilterByStatus
   , testFilterByPriority
   , testFilterByAssignee
+  , testEffectivePriority
+  , testTransitionTask
+  , testCountByStatus
+  , testTotalPriorityScore
+  , testCalculateEffort
+  , testValidateDependencies
   , testProgressSprintEmpty
   , testProgressSprintAllDone
   , testProgressSprintMixed

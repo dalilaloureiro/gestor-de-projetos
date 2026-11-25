@@ -29,6 +29,17 @@ module Domain
   , filterByStatus
   , filterByPriority
   , filterByAssignee
+    -- * Prioridade efetiva
+  , effectivePriority
+    -- * Transições de estado
+  , validTransitions
+  , canTransition
+  , transitionTask
+  , validateDependencies
+    -- * Agregações
+  , countByStatus
+  , totalPriorityScore
+  , calculateEffort
     -- * Recursão justificada #1: progresso de sprint
   , progressSprint
     -- * Recursão justificada #2: progresso de projeto
@@ -93,6 +104,84 @@ filterByPriority priority = filter (\t -> taskPriority t == priority)
 -- | Filtra tarefas por responsável
 filterByAssignee :: MemberId -> [Task] -> [Task]
 filterByAssignee mid = filter (\t -> taskAssignee t == Just mid)
+
+-- | Sobe um nível de prioridade quando faltam três dias ou menos para o fim.
+effectivePriority :: Task -> Int -> Priority
+effectivePriority task daysRemaining
+  | daysRemaining > 3 = taskPriority task
+  | otherwise =
+      case taskPriority task of
+        Low      -> Medium
+        Medium   -> High
+        High     -> Critical
+        Critical -> Critical
+
+-- | Pares de estados cuja transição é permitida.
+validTransitions :: [(TaskStatus, TaskStatus)]
+validTransitions =
+  [ (ToDo, InProgress)
+  , (InProgress, Review)
+  , (Review, Done)
+  ]
+
+-- | Verifica se a transição entre dois estados é permitida.
+canTransition :: TaskStatus -> TaskStatus -> Bool
+canTransition current target = (current, target) `elem` validTransitions
+
+-- | Atualiza o estado de uma tarefa ou devolve uma mensagem de erro.
+transitionTask :: Task -> TaskStatus -> Either String Task
+transitionTask task target
+  | canTransition (taskStatus task) target =
+      Right (task { taskStatus = target })
+  | otherwise =
+      Left
+        ( "Transição de estado inválida: "
+            ++ showStatus (taskStatus task)
+            ++ " -> "
+            ++ showStatus target
+        )
+
+-- | Confirma que todos os IDs de dependência existem na lista de tarefas.
+validateDependencies :: [TaskId] -> [Task] -> Either String [TaskId]
+validateDependencies [] _ = Right []
+validateDependencies (depId:depIds) allTasks =
+  case findTaskById depId allTasks of
+    Nothing ->
+      Left ("ID de dependência inexistente: " ++ show depId)
+    Just _ ->
+      case validateDependencies depIds allTasks of
+        Left message -> Left message
+        Right validIds -> Right (depId : validIds)
+
+-- | Conta tarefas num estado específico percorrendo a lista com foldr.
+countByStatus :: TaskStatus -> [Task] -> Int
+countByStatus status = foldr countMatching 0
+  where
+    countMatching :: Task -> Int -> Int
+    countMatching task count
+      | taskStatus task == status = count + 1
+      | otherwise = count
+
+-- | Soma a pontuação das prioridades das tarefas usando foldr.
+totalPriorityScore :: [Task] -> Int
+totalPriorityScore = foldr addPriorityScore 0
+  where
+    addPriorityScore :: Task -> Int -> Int
+    addPriorityScore task total =
+      priorityScore (taskPriority task) + total
+
+    priorityScore :: Priority -> Int
+    priorityScore Low = 1
+    priorityScore Medium = 2
+    priorityScore High = 3
+    priorityScore Critical = 4
+
+-- | Soma os pontos de esforço das tarefas usando foldr.
+calculateEffort :: [Task] -> Int
+calculateEffort = foldr addEffortPoints 0
+  where
+    addEffortPoints :: Task -> Int -> Int
+    addEffortPoints task total = taskEffortPoints task + total
 
 -- Recursão justificada #1: progresso de sprint --------------------------------
 

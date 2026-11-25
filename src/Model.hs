@@ -74,6 +74,7 @@ data Task = Task
   , taskDescription :: String
   , taskStatus      :: TaskStatus
   , taskPriority    :: Priority
+  , taskEffortPoints :: Int
   , taskAssignee    :: Maybe MemberId
   , taskDependsOn   :: [TaskId]
   } deriving (Eq, Show, Read)
@@ -97,7 +98,7 @@ data Project = Project
   } deriving (Eq, Show, Read)
 
 -- Nota: os getters são gerados automaticamente pela sintaxe de record:
---   taskStatus, taskPriority, taskAssignee, taskDependsOn :: Task -> ...
+--   taskStatus, taskPriority, taskEffortPoints, taskAssignee, taskDependsOn :: Task -> ...
 --   sprintTasks :: Sprint -> [Task]
 --   projectSprints, projectMembers :: Project -> ...
 -- Estão disponíveis para uso direto via a exportação dos construtores de record (..)
