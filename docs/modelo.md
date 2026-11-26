@@ -47,14 +47,6 @@ classDiagram
         Done
     }
 
-    class Priority {
-        <<enumeration>>
-        Low
-        Medium
-        High
-        Critical
-    }
-
     Project "1" *-- "*" Sprint
     Project "1" *-- "*" Member
     Sprint "1" *-- "*" Task
@@ -88,17 +80,16 @@ data TaskStatus = ToDo | InProgress | Review | Done
 - **Sem `Ord`**: a ordem declarada não é uma ordem semântica relevante para o domínio
 - As transições permitidas entre estados são uma regra de domínio a implementar na Fase 2
 
-### 3.3 Priority (Sum Type)
+### 3.3 Priority (Type Synonym)
 
 ```haskell
-data Priority = Low | Medium | High | Critical
-  deriving (Eq, Show, Read, Enum, Bounded)
+type Priority = Int
 ```
 
-**Justificativa:**
-- **Enum/Bounded** para iteração e validação
-- A ordem declarada é semântica: `Low < Medium < High < Critical` (usada na Fase 2 para comparações)
-- **Sem `Ord` na Fase 1**: nenhuma função atual compara prioridades
+A prioridade é um número inteiro numa escala de 1 a 4: 1 = `Low`, 2 =
+`Medium`, 3 = `High`, 4 = `Critical`. A ordem numérica é a ordem semântica,
+por isso subir um nível corresponde a somar 1 (com saturação em 4).
+`showPriority` converte o número no nome usado nos relatórios.
 
 ### 3.4 Member (Record)
 
@@ -201,7 +192,7 @@ O conjunto de projetos da aplicação é representado diretamente como `[Project
 - `Eq`: necessário para testes e comparações em filtros
 - `Show`: debugging, logs, relatórios textuais
 - `Read`: parsing simples em `Parsing` (formato Haskell nativo)
-- `Enum`/`Bounded`: apenas em sum types finitos (`TaskStatus`, `Priority`)
+- `Enum`/`Bounded`: apenas no sum type finito (`TaskStatus`)
 
 ### 5.5 Construtores de Record na Fase 1
 - As entidades são construídas diretamente com os construtores de record (`Project`, `Sprint`, `Task`, `Member`)
@@ -223,7 +214,6 @@ O conjunto de projetos da aplicação é representado diretamente como `[Project
 | Tipo | Eq | Show | Read | Enum | Bounded |
 |------|:--:|:----:|:----:|:----:|:-------:|
 | TaskStatus | ✓ | ✓ | ✓ | ✓ | ✓ |
-| Priority | ✓ | ✓ | ✓ | ✓ | ✓ |
 | Member | ✓ | ✓ | ✓ |   |   |
 | Task | ✓ | ✓ | ✓ |   |   |
 | Sprint | ✓ | ✓ | ✓ |   |   |

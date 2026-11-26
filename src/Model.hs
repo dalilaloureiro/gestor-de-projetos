@@ -9,7 +9,7 @@ Tipos algébricos e records que modelam o domínio de gestão de projetos:
 projetos, sprints, tarefas e membros.
 
 A modelação segue os princípios da Programação Funcional:
-- Tipos de soma (sum types) para estados finitos (TaskStatus, Priority)
+- Tipos de soma (sum types) para estados finitos (`TaskStatus`)
 - Records para entidades com campos nomeados
 - Maybe para campos opcionais (ex.: responsável)
 - Listas para relações 1:N (tarefas de um sprint, sprints de um projeto)
@@ -21,9 +21,10 @@ module Model
   , SprintId
   , TaskId
   , MemberId
-    -- * Tipos de soma (estados e prioridades)
+    -- * Tipos de soma (estados)
   , TaskStatus (..)
-  , Priority (..)
+    -- * Escala de prioridade (sinónimo de Int)
+  , Priority
     -- * Entidades
   , Member (..)
   , Task (..)
@@ -52,14 +53,10 @@ data TaskStatus
   | Done
   deriving (Eq, Show, Read, Enum, Bounded)
 
--- | Prioridade de uma tarefa.
---   A ordem declarada é semântica: Low < Medium < High < Critical
-data Priority
-  = Low
-  | Medium
-  | High
-  | Critical
-  deriving (Eq, Show, Read, Enum, Bounded)
+-- | Prioridade de uma tarefa, numa escala de 1 a 4:
+--   1 = Low, 2 = Medium, 3 = High, 4 = Critical.
+--   A ordem numérica é a ordem semântica, por isso subir um nível é somar 1.
+type Priority = Int
 
 -- | Membro da equipa
 data Member = Member
@@ -97,7 +94,7 @@ data Project = Project
   } deriving (Eq, Show, Read)
 
 -- Nota: os getters são gerados automaticamente pela sintaxe de record:
---   taskStatus, taskPriority, taskAssignee, taskDependsOn :: Task -> ...
+--   taskStatus :: Task -> TaskStatus
 --   sprintTasks :: Sprint -> [Task]
 --   projectSprints, projectMembers :: Project -> ...
 -- Estão disponíveis para uso direto via a exportação dos construtores de record (..)

@@ -63,7 +63,7 @@ Princípio orientador do framework (secção 13): *"O objetivo não é maximizar
 
 | # | Tarefa | Entregável | Depende de |
 |---|---|---|---|
-| A1 | **Prioridade efetiva** em função pura: `effectivePriority :: Task -> Int -> Priority`, onde `Int` = dias restantes até ao fim do sprint (ex.: ≤3 dias sobe um nível, com saturação em `Critical`). O cálculo dos dias a partir de `sprintEnd` é Fase 3, por isso entra como argumento — mantém a função pura e testável | `src/Domain.hs` | — |
+| A1 | **Prioridade efetiva** em função pura: `effectivePriority :: Task -> Int -> Priority`, onde `Int` = dias restantes até ao fim do sprint (ex.: ≤3 dias soma 1, com saturação em 4 = `Critical`). O cálculo dos dias a partir de `sprintEnd` é Fase 3, por isso entra como argumento — mantém a função pura e testável | `src/Domain.hs` | — |
 | A2 | **Transições de estado com `Either`**: `validTransitions`, `canTransition`, `transitionTask :: Task -> TaskStatus -> Either String Task`, com mensagens de erro explicativas | `src/Domain.hs` | — |
 | A3 | **Agregações com `fold`**: `countByStatus`, `totalPriorityScore` (usar `foldr`/`foldl'` de forma natural, com comentário a justificar) | `src/Domain.hs` | — |
 | A4 | **Validação de dependências com `Either`**: `validateDependencies :: [TaskId] -> [Task] -> Either String [TaskId]` para IDs inexistentes. **Não alterar** `isBlocked :: TaskId -> [Task] -> Bool` (contrato da Fase 1, já testado) | `src/Domain.hs` | — |

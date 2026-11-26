@@ -104,16 +104,11 @@ filterByPriority priority = filter (\t -> taskPriority t == priority)
 filterByAssignee :: MemberId -> [Task] -> [Task]
 filterByAssignee mid = filter (\t -> taskAssignee t == Just mid)
 
--- | Sobe um nível de prioridade quando faltam três dias ou menos para o fim.
+-- | Sobe um nível quando faltam três dias ou menos, sem passar de 4 (Critical).
 effectivePriority :: Task -> Int -> Priority
 effectivePriority task daysRemaining
   | daysRemaining > 3 = taskPriority task
-  | otherwise =
-      case taskPriority task of
-        Low      -> Medium
-        Medium   -> High
-        High     -> Critical
-        Critical -> Critical
+  | otherwise = min 4 (taskPriority task + 1)
 
 -- | Pares de estados cuja transição é permitida.
 validTransitions :: [(TaskStatus, TaskStatus)]
@@ -166,19 +161,12 @@ countByStatus status = foldr countMatching 0
       | taskStatus task == status = count + 1
       | otherwise = count
 
--- | Soma a pontuação das prioridades das tarefas usando foldr.
+-- | Soma as prioridades das tarefas (escala de 1 a 4) usando foldr.
 totalPriorityScore :: [Task] -> Int
 totalPriorityScore = foldr addPriorityScore 0
   where
     addPriorityScore :: Task -> Int -> Int
-    addPriorityScore task total =
-      priorityScore (taskPriority task) + total
-
-    priorityScore :: Priority -> Int
-    priorityScore Low = 1
-    priorityScore Medium = 2
-    priorityScore High = 3
-    priorityScore Critical = 4
+    addPriorityScore task total = taskPriority task + total
 
 -- Recursão justificada #1: progresso de sprint --------------------------------
 
@@ -258,9 +246,10 @@ showStatus InProgress = "InProgress"
 showStatus Review     = "Review"
 showStatus Done       = "Done"
 
--- | Representação textual da prioridade
+-- | Representação textual da prioridade (1 = Low ... 4 = Critical).
 showPriority :: Priority -> String
-showPriority Low      = "Low"
-showPriority Medium   = "Medium"
-showPriority High     = "High"
-showPriority Critical = "Critical"
+showPriority 1 = "Low"
+showPriority 2 = "Medium"
+showPriority 3 = "High"
+showPriority 4 = "Critical"
+showPriority _ = "desconhecida"

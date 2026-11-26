@@ -36,10 +36,10 @@ testSprint :: Sprint
 testSprint = Sprint 1 "Sprint 1" "2024-01-01" "2024-01-14" []
 
 testTaskTodo :: Task
-testTaskTodo = Task 1 "Tarefa 1" "Desc" ToDo Medium Nothing []
+testTaskTodo = Task 1 "Tarefa 1" "Desc" ToDo 2 Nothing []
 
 testTaskDone :: Task
-testTaskDone = Task 2 "Tarefa 2" "Desc" Done High Nothing []
+testTaskDone = Task 2 "Tarefa 2" "Desc" Done 3 Nothing []
 
 -- Acesso aos dados de demonstração (o seed tem sempre 2 sprints)
 seedSprint1 :: Sprint
@@ -95,8 +95,8 @@ testFilterByStatus = TestCase $ do
 testFilterByPriority :: Test
 testFilterByPriority = TestCase $ do
   let tasks = [testTaskTodo, testTaskDone]
-  assertEqual "filterByPriority Medium" [testTaskTodo] (Domain.filterByPriority Medium tasks)
-  assertEqual "filterByPriority High" [testTaskDone] (Domain.filterByPriority High tasks)
+  assertEqual "filterByPriority 2" [testTaskTodo] (Domain.filterByPriority 2 tasks)
+  assertEqual "filterByPriority 3" [testTaskDone] (Domain.filterByPriority 3 tasks)
 
 testFilterByAssignee :: Test
 testFilterByAssignee = TestCase $ do
@@ -108,17 +108,17 @@ testFilterByAssignee = TestCase $ do
 testEffectivePriority :: Test
 testEffectivePriority = TestCase $ do
   assertEqual "mais de três dias mantém prioridade"
-    Medium (Domain.effectivePriority testTaskTodo 4)
+    2 (Domain.effectivePriority testTaskTodo 4)
   assertEqual "três dias sobe Medium para High"
-    High (Domain.effectivePriority testTaskTodo 3)
-  assertEqual "prioridade Low sobe para Medium"
-    Medium (Domain.effectivePriority (testTaskTodo { taskPriority = Low }) 2)
-  assertEqual "prioridade High sobe para Critical"
-    Critical (Domain.effectivePriority (testTaskTodo { taskPriority = High }) 1)
-  assertEqual "Critical não sobe acima de Critical"
-    Critical (Domain.effectivePriority (testTaskTodo { taskPriority = Critical }) 0)
+    3 (Domain.effectivePriority testTaskTodo 3)
+  assertEqual "prioridade 1 sobe para 2"
+    2 (Domain.effectivePriority (testTaskTodo { taskPriority = 1 }) 2)
+  assertEqual "prioridade 3 sobe para 4"
+    4 (Domain.effectivePriority (testTaskTodo { taskPriority = 3 }) 1)
+  assertEqual "4 não sobe acima de 4"
+    4 (Domain.effectivePriority (testTaskTodo { taskPriority = 4 }) 0)
   assertEqual "tarefa atrasada também satisfaz dias restantes <= 3"
-    High (Domain.effectivePriority testTaskTodo (-1))
+    3 (Domain.effectivePriority testTaskTodo (-1))
 
 testTransitionTask :: Test
 testTransitionTask = TestCase $ do
@@ -154,10 +154,10 @@ testCountByStatus = TestCase $ do
 testTotalPriorityScore :: Test
 testTotalPriorityScore = TestCase $ do
   let tasks =
-        [ testTaskTodo { taskPriority = Low }
-        , testTaskTodo { taskPriority = Medium }
-        , testTaskTodo { taskPriority = High }
-        , testTaskTodo { taskPriority = Critical }
+        [ testTaskTodo { taskPriority = 1 }
+        , testTaskTodo { taskPriority = 2 }
+        , testTaskTodo { taskPriority = 3 }
+        , testTaskTodo { taskPriority = 4 }
         ]
   assertEqual "soma os pontos das quatro prioridades" 10
     (Domain.totalPriorityScore tasks)
@@ -237,8 +237,8 @@ testShowStatusAndPriority :: Test
 testShowStatusAndPriority = TestCase $ do
   assertEqual "showStatus ToDo" "ToDo" (Domain.showStatus ToDo)
   assertEqual "showStatus Done" "Done" (Domain.showStatus Done)
-  assertEqual "showPriority Critical" "Critical" (Domain.showPriority Critical)
-  assertEqual "showPriority Low" "Low" (Domain.showPriority Low)
+  assertEqual "showPriority 4" "Critical" (Domain.showPriority 4)
+  assertEqual "showPriority 1" "Low" (Domain.showPriority 1)
 
 -- Testes sobre os dados de demonstração (Seed) --------------------------------
 
@@ -271,7 +271,7 @@ testSeedBlocked = TestCase $ do
 testSeedFilters :: Test
 testSeedFilters = TestCase $ do
   assertEqual "seed: filtro Done" 2 (length (Domain.filterByStatus Done tarefasSprint1))
-  assertEqual "seed: filtro High" 3 (length (Domain.filterByPriority High tarefasSprint1))
+  assertEqual "seed: filtro 3 (High)" 3 (length (Domain.filterByPriority 3 tarefasSprint1))
   assertEqual "seed: filtro Alice" 3 (length (Domain.filterByAssignee 1 tarefasSprint1))
   assertEqual "seed: filtro inexistente" [] (Domain.filterByAssignee 99 tarefasSprint1)
 

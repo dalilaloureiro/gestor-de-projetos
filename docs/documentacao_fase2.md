@@ -12,14 +12,14 @@ effectivePriority :: Task -> Int -> Priority
 
 Recebe uma tarefa e o número de dias restantes até ao fim do sprint. Se
 faltarem mais de três dias, devolve a prioridade base da tarefa. Se faltarem
-três dias ou menos, sobe a prioridade exatamente um nível:
+três dias ou menos, soma 1 ao valor da prioridade, sem passar de 4:
 
-| Prioridade base | Prioridade efetiva |
-|---|---|
-| `Low` | `Medium` |
-| `Medium` | `High` |
-| `High` | `Critical` |
-| `Critical` | `Critical` |
+| Valor | Nome |
+|---:|---|
+| 1 | `Low` |
+| 2 | `Medium` |
+| 3 | `High` |
+| 4 | `Critical` |
 
 A função não calcula a data nem altera a tarefa; recebe os dias restantes como
 argumento e devolve uma prioridade.
@@ -79,15 +79,8 @@ vazia ou sem tarefas nesse estado produz `0`.
 totalPriorityScore :: [Task] -> Int
 ```
 
-Soma uma pontuação por cada tarefa, usando a escala definida para esta
-implementação:
-
-| Prioridade | Pontos |
-|---|---:|
-| `Low` | 1 |
-| `Medium` | 2 |
-| `High` | 3 |
-| `Critical` | 4 |
+Soma o valor da prioridade de cada tarefa, na escala de 1 (`Low`) a 4
+(`Critical`) definida no modelo:
 
 A função usa `foldr` para acumular a soma. Uma lista vazia produz `0`.
 

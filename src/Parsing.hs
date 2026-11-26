@@ -79,7 +79,7 @@ parseTaskId = undefined
 parseMemberId :: String -> Either String MemberId
 parseMemberId = undefined
 
--- | Parsing de Priority a partir de String (case-insensitive)
+-- | Parsing de prioridade a partir de String: aceita "1" a "4" e valida o intervalo.
 parsePriority :: String -> Either String Priority
 parsePriority = undefined
 

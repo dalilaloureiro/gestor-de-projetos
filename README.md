@@ -84,7 +84,7 @@ A regra de transição recusa saltos (`ToDo` → `Done`) e recuos (`Review` → 
 
 | Conceito | Onde aparece no projeto |
 |---|---|
-| **ADTs e records** | `TaskStatus`, `Priority`, `Member`, `Task`, `Sprint`, `Project`. |
+| **ADTs e records** | `TaskStatus`, `Member`, `Task`, `Sprint`, `Project`. A prioridade é um `Int` entre 1 e 4. |
 | **Pattern matching** | Transições de estado, formatação de relatórios, parsing. |
 | **Recursão** | Percorrer listas de projetos/sprints/tarefas, deteção de dependências (possivelmente recursiva), cálculo de progresso. |
 | **Funções de ordem superior** | Fase 2: filtros combináveis e critérios de ordenação. |

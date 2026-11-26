@@ -24,31 +24,31 @@ Tarefas:
 
 1. `Configurar repositório`  
    - Estado: `Done`
-   - Prioridade: `High`
+   - Prioridade: `3` (`High`)
    - Responsável: Alice
    - Sem dependências
 
 2. `Criar modelo de domínio`  
    - Estado: `Done`
-   - Prioridade: `High`
+   - Prioridade: `3` (`High`)
    - Responsável: Alice
    - Sem dependências
 
 3. `Implementar Domain.hs`  
    - Estado: `InProgress`
-   - Prioridade: `High`
+   - Prioridade: `3` (`High`)
    - Responsável: Alice
    - Sem dependências
 
 4. `Escrever testes`  
    - Estado: `ToDo`
-   - Prioridade: `Medium`
+   - Prioridade: `2` (`Medium`)
    - Responsável: Bob
    - Depende de tarefa 3
 
 5. `Configurar persistência`  
    - Estado: `ToDo`
-   - Prioridade: `Medium`
+   - Prioridade: `2` (`Medium`)
    - Responsável: David
    - Sem dependências
 
@@ -57,25 +57,25 @@ Tarefas:
 
 6. `Implementar Parsing.hs`  
    - Estado: `ToDo`
-   - Prioridade: `High`
+   - Prioridade: `3` (`High`)
    - Responsável: Alice
    - Sem dependências
 
 7. `Implementar Reports.hs`  
    - Estado: `ToDo`
-   - Prioridade: `Medium`
+   - Prioridade: `2` (`Medium`)
    - Responsável: Carol
    - Depende da tarefa 6
 
 8. `Interface de terminal`  
    - Estado: `ToDo`
-   - Prioridade: `Medium`
+   - Prioridade: `2` (`Medium`)
    - Responsável: David
    - Depende da tarefa 6
 
 9. `Corrigir bug no parsing`  
    - Estado: `ToDo`
-   - Prioridade: `Critical`
+   - Prioridade: `4` (`Critical`)
    - Responsável: Bob
    - Sem dependências
 
@@ -117,7 +117,7 @@ Os dados permitem validar diretamente:
 | `isBlocked 4` (Sprint 1) | `True` (depende da tarefa 3, `InProgress`) |
 | `isBlocked 3` (Sprint 1) | `False` (sem dependências) |
 | `filterByStatus Done` (Sprint 1) | 2 tarefas |
-| `filterByPriority High` (Sprint 1) | 3 tarefas |
+| `filterByPriority 3` (Sprint 1) | 3 tarefas |
 | `filterByAssignee 1` (Sprint 1) | 3 tarefas (Alice) |
 
 A combinação de tarefas concluídas, em progresso e por fazer funciona como base para demonstrar o comportamento real do domínio em Haskell.

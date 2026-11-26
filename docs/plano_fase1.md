@@ -51,7 +51,7 @@ Para evitar bloqueios e sobreposição:
 
 | # | Tarefa | Entregável | Depende de |
 |---|---|---|---|
-| A1 | Definir ADTs e records principais (`TaskStatus`, `Priority`, `Member`, `Task`, `Sprint`, `Project`) | `src/Model.hs` | — |
+| A1 | Definir ADTs e records principais (`TaskStatus`, `Member`, `Task`, `Sprint`, `Project`) | `src/Model.hs` | — |
 | A2 | Definir assinaturas explícitas dos tipos e derivar `Eq`, `Show`, `Read`, `Enum`, `Bounded` onde fizer sentido | `src/Model.hs` | A1 |
 | A3 | Criar estrutura inicial do repositório (`taskflow.cabal`, `cabal.project`, pastas `src/`, `app/`, `test/`, `data/`, `docs/`) | Repositório compilável vazio | — |
 | A4 | Criar módulos esqueleto (`Domain.hs`, `Parsing.hs`, `Persistence.hs`, `Reports.hs`) com assinaturas comentadas (stubs) | Ficheiros `.hs` com `undefined`/comentários | A3 |
