@@ -109,10 +109,13 @@ isStatus :: TaskStatus -> Task -> Bool
 isStatus status = (== status) . taskStatus
 
 -- | A tarefa tem a prioridade indicada?
+--   Composição: o mesmo padrão de 'isStatus', para poder ser passado a um filtro.
 isPriority :: Priority -> Task -> Bool
 isPriority priority = (== priority) . taskPriority
 
 -- | A tarefa está atribuída ao membro indicado?
+--   Composição: compara com @Just mid@, por isso uma tarefa sem responsável
+--   nunca é aceite.
 isAssignee :: MemberId -> Task -> Bool
 isAssignee mid = (== Just mid) . taskAssignee
 
@@ -128,15 +131,18 @@ matchesAll predicates task = all ($ task) predicates
 filterBy :: (Task -> Bool) -> [Task] -> [Task]
 filterBy = filter
 
--- | Filtra tarefas por estado
+-- | Filtra tarefas por estado.
+--   Composição: 'isStatus' constrói o predicado que 'filterBy' aplica.
 filterByStatus :: TaskStatus -> [Task] -> [Task]
 filterByStatus = filterBy . isStatus
 
--- | Filtra tarefas por prioridade
+-- | Filtra tarefas por prioridade.
+--   Composição de 'filterBy' com 'isPriority', sem repetir a travessia da lista.
 filterByPriority :: Priority -> [Task] -> [Task]
 filterByPriority = filterBy . isPriority
 
--- | Filtra tarefas por responsável
+-- | Filtra tarefas por responsável.
+--   Composição de 'filterBy' com 'isAssignee': só muda o critério.
 filterByAssignee :: MemberId -> [Task] -> [Task]
 filterByAssignee = filterBy . isAssignee
 
@@ -152,10 +158,13 @@ taskTitles :: [Task] -> [String]
 taskTitles = map taskTitle
 
 -- | Títulos das tarefas num dado estado: pipeline @map f . filter p@.
+--   'filter' seleciona as tarefas e só depois 'map' extrai os títulos, porque o
+--   estado deixa de estar disponível após a transformação.
 taskTitlesByStatus :: TaskStatus -> [Task] -> [String]
 taskTitlesByStatus status = map taskTitle . filter (isStatus status)
 
 -- | Tarefas de um membro em todos os sprints do projeto.
+--   Composição: primeiro junta as tarefas dos sprints, depois filtra-as.
 tasksOfMember :: MemberId -> Project -> [Task]
 tasksOfMember mid = filterByAssignee mid . projectTasks
 

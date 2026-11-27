@@ -18,6 +18,7 @@ Framework: HUnit (simples, sem dependências pesadas)
 -}
 module Main (main) where
 
+import Data.Either (isLeft)
 import Data.List (isInfixOf)
 import Test.HUnit
 import Model
@@ -463,6 +464,17 @@ testDependencyErrors = TestCase $ do
     (Left "ID de dependência inexistente: 98")
     (Domain.validateDependencies [98, 99] [testTaskTodo])
 
+-- Das 16 combinações de estados, só as 3 de avanço são aceites.
+testAllInvalidTransitions :: Test
+testAllInvalidTransitions = TestCase $ do
+  let states = [minBound .. maxBound] :: [TaskStatus]
+  let results =
+        [ Domain.transitionTask testTaskTodo { taskStatus = from } to
+        | from <- states
+        , to <- states
+        ]
+  assertEqual "13 transições devolvem Left" 13 (length (filter isLeft results))
+
 testNothingOnEmpty :: Test
 testNothingOnEmpty = TestCase $ do
   assertEqual "findProject em lista vazia" Nothing (Domain.findProject 1 [])
@@ -520,6 +532,7 @@ tests = TestList
   , testTransitionErrors
   , testDependencyErrors
   , testNothingOnEmpty
+  , testAllInvalidTransitions
   ]
 
 main :: IO ()

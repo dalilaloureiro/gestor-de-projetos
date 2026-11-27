@@ -40,6 +40,7 @@ import Text.Printf (printf)
 -- | Relatório completo de um sprint: cabeçalho, progresso, tarefas por estado
 --   e tarefas bloqueadas. As dependências são procuradas nas tarefas do próprio
 --   sprint, por isso uma dependência de outro sprint conta como pendente.
+--   'concat' junta as secções, cada uma já terminada em mudança de linha.
 sprintReport :: Sprint -> String
 sprintReport sprint =
   concat
@@ -134,6 +135,8 @@ memberWorkload mid project =
     totalLine = "Total: " ++ show (length tasks)
 
 -- | Tarefas ativas (InProgress, Review) de um membro.
+--   Pipeline por composição: 'filterBy' seleciona as ativas, 'map' transforma
+--   cada tarefa numa linha e 'unlines' junta as linhas.
 memberActiveTasks :: MemberId -> Project -> String
 memberActiveTasks mid =
   unlines . indentList . map formatTaskLine . filterBy isActive . tasksOfMember mid
@@ -147,7 +150,9 @@ memberActiveTasks mid =
 formatPercentage :: Double -> String
 formatPercentage = printf "%.1f%%"
 
--- | Formata uma linha de tarefa para listagens
+-- | Formata uma linha de tarefa para listagens.
+--   'intercalate' junta os campos com um separador; 'maybe' (HOF) aplica
+--   'showMemberRef' só quando existe responsável.
 formatTaskLine :: Task -> String
 formatTaskLine task =
   intercalate " | "
@@ -165,6 +170,7 @@ showTaskRef :: TaskId -> String
 showTaskRef tid = '#' : show tid
 
 -- | Indenta as linhas de uma lista; uma lista vazia é assinalada explicitamente.
+--   'map' porque cada linha é transformada de forma independente.
 indentList :: [String] -> [String]
 indentList [] = ["  (nenhuma)"]
 indentList items = map ("  " ++) items
