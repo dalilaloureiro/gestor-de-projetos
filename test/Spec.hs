@@ -1,12 +1,15 @@
 {-|
 Module      : Spec
-Description : Suite de testes para o núcleo funcional (Domain)
+Description : Suite de testes para o núcleo funcional (Domain e Reports)
 
 Testes das funções puras principais:
 - Consultas (findProject, findSprint, findTask, findMember)
 - Filtros (por estado, prioridade e responsável)
 - Recursão justificada: progressSprint, progressProject, isBlocked
 - Formatação (showStatus, showPriority)
+- Predicados, filtros HOF e pipelines (Fase 2)
+- Relatórios puros de sprint e de membro (Fase 2)
+- Situações de erro: Left e Nothing
 - Dados de demonstração (módulo Seed) usados como cenário real
 
 Casos normais, limites (listas vazias) e consultas sem resultado.
@@ -15,9 +18,11 @@ Framework: HUnit (simples, sem dependências pesadas)
 -}
 module Main (main) where
 
+import Data.List (isInfixOf)
 import Test.HUnit
 import Model
 import qualified Domain
+import qualified Reports
 import Seed
 import System.Exit (exitFailure)
 
@@ -275,6 +280,198 @@ testSeedFilters = TestCase $ do
   assertEqual "seed: filtro Alice" 3 (length (Domain.filterByAssignee 1 tarefasSprint1))
   assertEqual "seed: filtro inexistente" [] (Domain.filterByAssignee 99 tarefasSprint1)
 
+-- Fase 2: predicados, filtros HOF e pipelines ---------------------------------
+
+testFilterBy :: Test
+testFilterBy = TestCase $ do
+  let tasks = [testTaskTodo, testTaskDone]
+  assertEqual "filterBy com critério próprio" [testTaskDone]
+    (Domain.filterBy ((> 2) . taskPriority) tasks)
+  assertEqual "filterBy em lista vazia" []
+    (Domain.filterBy (Domain.isStatus Done) [])
+  assertEqual "filterBy quando todas satisfazem" [testTaskDone, testTaskDone]
+    (Domain.filterBy (Domain.isStatus Done) [testTaskDone, testTaskDone])
+
+testMatchesAll :: Test
+testMatchesAll = TestCase $ do
+  let mine = testTaskDone { taskId = 3, taskAssignee = Just 1 }
+  let tasks = [testTaskTodo, testTaskDone, mine]
+  assertEqual "combina estado, prioridade e responsável" [mine]
+    (Domain.filterBy
+      (Domain.matchesAll
+        [Domain.isStatus Done, Domain.isPriority 3, Domain.isAssignee 1])
+      tasks)
+  assertEqual "sem predicados aceita todas" tasks
+    (Domain.filterBy (Domain.matchesAll []) tasks)
+  assertEqual "predicados incompatíveis não aceitam nenhuma" []
+    (Domain.filterBy
+      (Domain.matchesAll [Domain.isStatus Done, Domain.isStatus ToDo])
+      tasks)
+
+testPipelines :: Test
+testPipelines = TestCase $ do
+  let tasks = [testTaskTodo, testTaskDone]
+  assertEqual "taskTitles mantém a ordem" ["Tarefa 1", "Tarefa 2"]
+    (Domain.taskTitles tasks)
+  assertEqual "taskTitles de lista vazia" [] (Domain.taskTitles [])
+  assertEqual "taskTitlesByStatus" ["Tarefa 2"]
+    (Domain.taskTitlesByStatus Done tasks)
+  assertEqual "taskTitlesByStatus sem resultados" []
+    (Domain.taskTitlesByStatus Review tasks)
+
+testProjectTasks :: Test
+testProjectTasks = TestCase $ do
+  let mine1 = testTaskTodo { taskAssignee = Just 1 }
+  let mine2 = testTaskDone { taskAssignee = Just 1 }
+  let proj = testProject
+        { projectSprints =
+            [ testSprint { sprintTasks = [mine1] }
+            , testSprint { sprintId = 2, sprintTasks = [mine2] }
+            ]
+        }
+  assertEqual "projectTasks junta os sprints por ordem" [mine1, mine2]
+    (Domain.projectTasks proj)
+  assertEqual "projeto sem sprints não tem tarefas" []
+    (Domain.projectTasks testProject)
+  assertEqual "projeto com sprint vazio não tem tarefas" []
+    (Domain.projectTasks testProject { projectSprints = [testSprint] })
+  assertEqual "tasksOfMember percorre todos os sprints" [mine1, mine2]
+    (Domain.tasksOfMember 1 proj)
+  assertEqual "membro sem tarefas" [] (Domain.tasksOfMember 2 proj)
+
+-- Fase 2: relatórios puros ----------------------------------------------------
+
+testFormatPercentage :: Test
+testFormatPercentage = TestCase $ do
+  assertEqual "zero" "0.0%" (Reports.formatPercentage 0)
+  assertEqual "cem" "100.0%" (Reports.formatPercentage 100)
+  assertEqual "arredonda a uma casa" "66.7%" (Reports.formatPercentage (200 / 3))
+
+testFormatTaskLine :: Test
+testFormatTaskLine = TestCase $ do
+  assertEqual "sem responsável"
+    "#1 Tarefa 1 | ToDo | prioridade: Medium | responsável: sem responsável"
+    (Reports.formatTaskLine testTaskTodo)
+  assertEqual "com responsável"
+    "#2 Tarefa 2 | Done | prioridade: High | responsável: membro #1"
+    (Reports.formatTaskLine testTaskDone { taskAssignee = Just 1 })
+
+testSprintReportEmpty :: Test
+testSprintReportEmpty = TestCase $ do
+  assertEqual "relatório de sprint vazio"
+    (unlines
+      [ "== Sprint 1 (2024-01-01 a 2024-01-14) =="
+      , "Progresso: 0.0%"
+      , ""
+      , "Tarefas por estado:"
+      , "ToDo (0)"
+      , "  (nenhuma)"
+      , "InProgress (0)"
+      , "  (nenhuma)"
+      , "Review (0)"
+      , "  (nenhuma)"
+      , "Done (0)"
+      , "  (nenhuma)"
+      , ""
+      , "Tarefas bloqueadas:"
+      , "  (nenhuma)"
+      ])
+    (Reports.sprintReport testSprint)
+
+testSprintReportAllDone :: Test
+testSprintReportAllDone = TestCase $ do
+  let sprint = testSprint { sprintTasks = [testTaskDone] }
+  let report = Reports.sprintReport sprint
+  assertBool "progresso a 100%" ("Progresso: 100.0%" `isInfixOf` report)
+  assertBool "conta a tarefa concluída" ("Done (1)" `isInfixOf` report)
+  assertEqual "nenhuma bloqueada" "  (nenhuma)\n"
+    (Reports.sprintBlockedTasks sprint (sprintTasks sprint))
+
+testSprintBlockedTasks :: Test
+testSprintBlockedTasks = TestCase $ do
+  let blocked = testTaskTodo { taskDependsOn = [2, 99] }
+  let pending = testTaskTodo { taskId = 2, taskTitle = "Tarefa 2" }
+  let sprint = testSprint { sprintTasks = [blocked, pending] }
+  assertEqual "indica as dependências pendentes e inexistentes"
+    "  #1 Tarefa 1 (à espera de: #2, #99)\n"
+    (Reports.sprintBlockedTasks sprint (sprintTasks sprint))
+
+testMemberReport :: Test
+testMemberReport = TestCase $ do
+  let active = testTaskTodo { taskStatus = InProgress, taskAssignee = Just 1 }
+  let finished = testTaskDone { taskAssignee = Just 1 }
+  let proj = testProject
+        { projectSprints = [testSprint { sprintTasks = [active, finished] }] }
+  assertEqual "relatório com tarefas em curso e concluídas"
+    (unlines
+      [ "== Alice =="
+      , "Carga de trabalho:"
+      , "  ToDo: 0"
+      , "  InProgress: 1"
+      , "  Review: 0"
+      , "  Done: 1"
+      , "  Total: 2"
+      , ""
+      , "Tarefas em curso:"
+      , "  " ++ Reports.formatTaskLine active
+      ])
+    (Reports.memberReport 1 proj)
+
+testMemberReportNoTasks :: Test
+testMemberReportNoTasks = TestCase $ do
+  assertEqual "membro sem tarefas"
+    (unlines
+      [ "== Bob =="
+      , "Carga de trabalho:"
+      , "  ToDo: 0"
+      , "  InProgress: 0"
+      , "  Review: 0"
+      , "  Done: 0"
+      , "  Total: 0"
+      , ""
+      , "Tarefas em curso:"
+      , "  (nenhuma)"
+      ])
+    (Reports.memberReport 2 testProject)
+
+-- Fase 2: situações de erro ---------------------------------------------------
+
+testMemberReportUnknown :: Test
+testMemberReportUnknown = TestCase $ do
+  assertEqual "membro inexistente"
+    "Membro #999 não encontrado no projeto.\n"
+    (Reports.memberReport 999 testProject)
+
+testTransitionErrors :: Test
+testTransitionErrors = TestCase $ do
+  assertEqual "tarefa concluída não reabre"
+    (Left "Transição de estado inválida: Done -> InProgress")
+    (Domain.transitionTask testTaskDone InProgress)
+  assertEqual "ToDo não salta para Review"
+    (Left "Transição de estado inválida: ToDo -> Review")
+    (Domain.transitionTask testTaskTodo Review)
+  assertEqual "Review não recua"
+    (Left "Transição de estado inválida: Review -> InProgress")
+    (Domain.transitionTask testTaskTodo { taskStatus = Review } InProgress)
+
+testDependencyErrors :: Test
+testDependencyErrors = TestCase $ do
+  assertEqual "sem tarefas, qualquer dependência é inexistente"
+    (Left "ID de dependência inexistente: 1")
+    (Domain.validateDependencies [1] [])
+  assertEqual "com vários erros, reporta o primeiro"
+    (Left "ID de dependência inexistente: 98")
+    (Domain.validateDependencies [98, 99] [testTaskTodo])
+
+testNothingOnEmpty :: Test
+testNothingOnEmpty = TestCase $ do
+  assertEqual "findProject em lista vazia" Nothing (Domain.findProject 1 [])
+  assertEqual "findSprint em projeto sem sprints" Nothing
+    (Domain.findSprint 1 testProject)
+  assertEqual "findTask em sprint vazio" Nothing (Domain.findTask 1 testSprint)
+  assertEqual "findMember em projeto sem membros" Nothing
+    (Domain.findMember 1 testProject { projectMembers = [] })
+
 -- Suite principal -------------------------------------------------------------
 
 tests :: Test
@@ -308,6 +505,21 @@ tests = TestList
   , testSeedProgressProject
   , testSeedBlocked
   , testSeedFilters
+  , testFilterBy
+  , testMatchesAll
+  , testPipelines
+  , testProjectTasks
+  , testFormatPercentage
+  , testFormatTaskLine
+  , testSprintReportEmpty
+  , testSprintReportAllDone
+  , testSprintBlockedTasks
+  , testMemberReport
+  , testMemberReportNoTasks
+  , testMemberReportUnknown
+  , testTransitionErrors
+  , testDependencyErrors
+  , testNothingOnEmpty
   ]
 
 main :: IO ()
